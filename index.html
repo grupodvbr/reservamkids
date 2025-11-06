@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel de Reservas • M.Kids</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="color-scheme" content="light" />
+  <style>
+    /* ======== Tema Infantil ======== */
+    :root{
+      --bg:#fefefe;
+      --card:#ffffff;
+      --text:#333;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --brand:#60a5fa; /* azul bebê */
+      --brand-2:#93c5fd;
+      --ok:#22c55e; 
+      --warn:#facc15;
+      --danger:#f87171;
+      --accent:#f472b6; /* rosa bebê */
+      --radius:16px;
+      --shadow:0 8px 20px rgba(0,0,0,.08);
+      --glass:rgba(255,255,255,.7);
+    }
+
+    *{box-sizing:border-box;}
+    html,body{height:100%;margin:0;font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
+      radial-gradient(800px 600px at -10% -20%, rgba(250,191,36,.12), transparent 60%),
+      radial-gradient(900px 700px at 110% -10%, rgba(96,165,250,.12), transparent 60%),
+      var(--bg);
+      color:var(--text);}
+    .wrap{max-width:1180px;margin:auto;padding:28px 18px 40px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+    .title{font-size:clamp(1.2rem,2.6vw,1.8rem);font-weight:900;display:flex;align-items:center;gap:10px;color:#60a5fa}
+    .badge{background:linear-gradient(90deg,var(--brand),var(--accent));color:#fff;font-size:.85rem;padding:6px 10px;border-radius:999px;box-shadow:var(--shadow)}
+
+    /* ======== Cartões ======== */
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-head{padding:16px 18px;border-bottom:1px dashed var(--line);background:var(--glass);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:space-between}
+    .card-head h2{margin:0;font-size:1.05rem;color:#3b82f6}
+    .section{padding:18px}
+    .section + .section{border-top:1px dashed var(--line)}
+    .section h3{margin:0 0 10px;font-size:1rem;color:var(--accent);font-weight:700}
+
+    /* ======== Inputs ======== */
+    label{font-weight:600;font-size:.94rem}
+    input,select,textarea,button{
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);
+      background:transparent;color:inherit;font-size:16px;outline:none;transition:.15s;
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(96,165,250,.25)}
+    textarea{min-height:90px;resize:vertical}
+    .btn{border:0;cursor:pointer;font-weight:700;border-radius:12px;padding:12px}
+    .btn-primary{background:linear-gradient(90deg,var(--brand),var(--accent));color:#fff}
+    .btn-ghost{background:#fff;border:1px dashed var(--line)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:.84rem;background:var(--glass)}
+    .hint{font-size:.82rem;color:var(--muted)}
+
+    /* ======== Calendário ======== */
+    .cal{padding:16px}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .cal-dow{text-align:center;font-weight:700;color:var(--accent)}
+    .cal-day{border:1px solid var(--line);border-radius:14px;padding:12px;min-height:110px;cursor:pointer;transition:.12s}
+    .cal-day:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.08)}
+    .cal-day.out{opacity:.45}
+    .num{font-weight:900;font-size:1.05rem}
+    .tag{font-size:.75rem;padding:4px 8px;border-radius:999px;border:1px solid var(--line)}
+    .t-pend{background:#fef9c3;border-color:#fde68a}
+    .t-done{background:#dcfce7;border-color:#bbf7d0}
+    .t-vip{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
+    .t-outros{background:#ffedd5;border-color:#fed7aa;color:#9a3412}
+
+    /* ======== Resumo ======== */
+    .summary{padding:16px;border-top:1px dashed var(--line);background:var(--glass)}
+    .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .kpi{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+    .kpi .label{font-size:.9rem;color:var(--muted)}
+    .kpi .value{font-size:1.4rem;font-weight:900;color:#3b82f6}
+
+    /* ======== Modais ======== */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:60}
+    .modal.show{display:flex}
+    .sheet{background:var(--card);width:100%;max-height:82vh;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.25);overflow:auto}
+    .res-item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;background:var(--glass)}
+    .res-item .name.credito{color:var(--ok);font-weight:900}
+    .row{display:flex;align-items:center;gap:10px}
+    .toast{position:fixed;bottom:16px;right:16px;background:#3b82f6;color:#fff;padding:12px 14px;border-radius:12px;display:none}
+    .toast.show{display:block}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">🎈 Reservas • M.Kids</div>
+      <div class="badge">Cadastro → Calendário → Resumo</div>
+    </header>
+
+    <!-- ======== FORM ======== -->
+    <form id="reservaForm" class="card" novalidate>
+      <div class="card-head"><h2>Nova / Editar Reserva</h2></div>
+      <input type="hidden" name="acao" value="cadastrar">
+      <input type="hidden" name="status" value="Pendente">
+      <input type="hidden" id="reservaId" name="id">
+
+      <div class="section">
+        <h3>👶 Dados do Cliente</h3>
+        <div class="row" style="flex-wrap:wrap;gap:10px">
+          <div style="flex:1 1 45%"><label>Nome</label><input id="nome" name="nome" required></div>
+          <div style="flex:1 1 45%"><label>Email</label><input id="email" name="email" type="email" required></div>
+          <div style="flex:1 1 45%"><label>Telefone</label><input id="telefone" name="telefone" required></div>
+          <div style="flex:1 1 45%"><label>Pessoas</label><input id="pessoas" name="pessoas" type="number" min="1" required></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>🎠 Detalhes</h3>
+        <div class="row" style="flex-wrap:wrap;gap:10px">
+          <div style="flex:1 1 45%">
+            <label>Local</label>
+            <select id="mesa" name="mesa" required>
+              <option value="">Selecione</option>
+              <option>Sala de Festa</option>
+              <option>Parquinho</option>
+              <option>Piscina de Bolinhas</option>
+            </select>
+          </div>
+          <div style="flex:1 1 45%">
+            <label>Cardápio</label>
+            <select id="cardapio" name="cardapio">
+              <option value="">Selecione</option>
+              <option>Buffet Kids</option>
+              <option>Pizza Infantil</option>
+              <option>Mini Lanches</option>
+            </select>
+          </div>
+        </div>
+        <label>Data e Hora</label>
+        <input id="datahora" name="datahora" type="datetime-local" required>
+      </div>
+
+      <div class="section">
+        <h3>💰 Pagamento</h3>
+        <div class="row" style="flex-wrap:wrap;gap:10px">
+          <div style="flex:1 1 45%"><label>Estimado (R$)</label><input id="valorEstimado" name="valorEstimado" inputmode="decimal"></div>
+          <div style="flex:1 1 45%"><label>Adiantamento (R$)</label><input id="pagamentoAntecipado" name="pagamentoAntecipado" inputmode="decimal"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>📝 Observações</h3>
+        <textarea id="observacoes" name="observacoes" rows="3" placeholder="Aniversariante, tema, etc."></textarea>
+      </div>
+
+      <footer style="padding:16px;display:flex;justify-content:flex-end;gap:10px">
+        <div class="chip">Status: <strong id="statusChip">PENDENTE</strong></div>
+        <button type="reset" class="btn btn-ghost">Limpar</button>
+        <button type="submit" class="btn btn-primary">Salvar Reserva</button>
+      </footer>
+    </form>
+
+    <!-- ======== CALENDÁRIO ======== -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-head">
+        <h2>Calendário de Reservas</h2>
+        <div class="row">
+          <button id="prevMonth" class="btn btn-ghost">◀</button>
+          <button id="todayBtn" class="btn btn-ghost">Hoje</button>
+          <button id="nextMonth" class="btn btn-ghost">▶</button>
+        </div>
+      </div>
+      <div class="cal">
+        <div id="calTitle" style="font-weight:800;text-align:center;margin-bottom:8px"></div>
+        <div id="calDow" class="cal-grid"></div>
+        <div id="calGrid" class="cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- ======== MODAL ======== -->
+    <div class="modal" id="dayModal">
+      <div class="sheet">
+        <h3 id="modalTitle" style="padding:16px 16px 0 16px">Reservas do dia</h3>
+        <div id="modalList" style="padding:16px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const endpoint = "https://script.google.com/macros/s/AKfycbwE-0oOl4wGHz7gFXHIgYHNihCTW4-uzUjGv_iLvPSWX1sma8pi9eJIwx1K4grFOILj/exec";
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const toast = msg => { const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); };
+    const parseBRL = v => Number(String(v||"").replace(/[^\d]/g,""))/100||0;
+    const formatBRL = n => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+    const ymd = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+    const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
+    const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    $("#calDow").innerHTML=dow.map(d=>`<div class='cal-dow'>${d}</div>`).join("");
+
+    async function loadMonth(a,m){
+      try{
+        const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
+        const data=await res.json();
+        state.reservas=data.map(r=>({...r,status:r.status||"Pendente"}));
+      }catch{state.reservas=[];}
+      buildCalendar();
+    }
+
+    function buildCalendar(){
+      const {mes,ano}=state;
+      $("#calTitle").textContent=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
+      const grid=$("#calGrid"); grid.innerHTML="";
+      const first=new Date(ano,mes,1);
+      const startDay=(first.getDay()+7)%7;
+      const start=new Date(first); start.setDate(1-startDay);
+      for(let i=0;i<42;i++){
+        const d=new Date(start); d.setDate(start.getDate()+i);
+        const inMonth=d.getMonth()===mes;
+        const cell=document.createElement("button");
+        cell.className="cal-day"+(inMonth?"":" out");
+        const items=state.reservas.filter(r=>r.datahora && ymd(new Date(r.datahora))===ymd(d));
+        const pend=items.filter(r=>r.status==="Pendente").length;
+        const conc=items.filter(r=>r.status==="Concluída").length;
+        cell.innerHTML=`<div class='num'>${d.getDate()}</div>
+        <div class='tags'>
+        ${pend?`<span class='tag t-pend'>Pend: ${pend}</span>`:""}
+        ${conc?`<span class='tag t-done'>Conc: ${conc}</span>`:""}
+        </div>`;
+        cell.onclick=()=>openDayModal(d,items);
+        grid.appendChild(cell);
+      }
+    }
+
+    function openDayModal(date,items){
+      $("#modalTitle").textContent=`Reservas de ${date.toLocaleDateString("pt-BR")}`;
+      const list=$("#modalList");
+      if(!items.length){list.innerHTML="<div class='hint'>Nenhuma reserva neste dia.</div>";}
+      else{
+        list.innerHTML=items.map(r=>{
+          const corCredito=r.status==="Crédito"?"credito":"";
+          return `<div class='res-item'><div class='row'><div class='name ${corCredito}'>${r.nome||"—"}</div>
+          <span class='chip'>${r.status}</span></div>
+          <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas</div></div>`;
+        }).join("");
+      }
+      $("#dayModal").classList.add("show");
+    }
+    $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
+
+    // Form
+    $("#reservaForm").onsubmit=async e=>{
+      e.preventDefault();
+      const fd=new FormData(e.target);
+      const payload=Object.fromEntries(fd.entries());
+      payload.status="Pendente";
+      const res=await fetch(endpoint,{method:"POST",body:new URLSearchParams(payload)});
+      if(res.ok){toast("✅ Reserva salva!"); loadMonth(state.ano,state.mes); e.target.reset();}
+      else toast("Erro ao salvar!");
+    };
+
+    $("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
+    $("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
+    $("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
+
+    loadMonth(state.ano,state.mes);
+  </script>
+</body>
+</html>
