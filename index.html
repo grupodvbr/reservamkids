@@ -195,84 +195,123 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbxWsAJTV1BPg0ochBczYqINFeli_dZIsmbqxu_WuGkzuFhWZBZW4FdZt_l5eKk0xe7HVA/exec";
-    const $ = s => document.querySelector(s);
-    const $$ = s => [...document.querySelectorAll(s)];
-    const toast = msg => { const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); };
-    const parseBRL = v => Number(String(v||"").replace(/[^\d]/g,""))/100||0;
-    const formatBRL = n => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-    const ymd = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const endpoint = "https://script.google.com/macros/s/AKfycbxWsAJTV1BPg0ochBczYqINFeli_dZIsmbqxu_WuGkzuFhWZBZW4FdZt_l5eKk0xe7HVA/exec";
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const toast = msg => {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+  };
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
-    const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
-    const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    $("#calDow").innerHTML=dow.map(d=>`<div class='cal-dow'>${d}</div>`).join("");
+  const state = { mes:(new Date()).getMonth(), ano:(new Date()).getFullYear(), reservas:[] };
+  const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  $("#calDow").innerHTML = dow.map(d => `<div class='cal-dow'>${d}</div>`).join("");
 
-    async function loadMonth(a,m){
-      try{
-        const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
-        const data=await res.json();
-        state.reservas=data.map(r=>({...r,status:r.status||"Pendente"}));
-      }catch{state.reservas=[];}
-      buildCalendar();
+  async function loadMonth(a,m){
+    try {
+      const res = await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
+      const data = await res.json();
+      state.reservas = data.map(r => ({...r, status: r.status || "Pendente"}));
+    } catch {
+      state.reservas = [];
     }
+    buildCalendar();
+  }
 
-    function buildCalendar(){
-      const {mes,ano}=state;
-      $("#calTitle").textContent=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
-      const grid=$("#calGrid"); grid.innerHTML="";
-      const first=new Date(ano,mes,1);
-      const startDay=(first.getDay()+7)%7;
-      const start=new Date(first); start.setDate(1-startDay);
-      for(let i=0;i<42;i++){
-        const d=new Date(start); d.setDate(start.getDate()+i);
-        const inMonth=d.getMonth()===mes;
-        const cell=document.createElement("button");
-        cell.className="cal-day"+(inMonth?"":" out");
-        const items=state.reservas.filter(r=>r.datahora && ymd(new Date(r.datahora))===ymd(d));
-        const pend=items.filter(r=>r.status==="Pendente").length;
-        const conc=items.filter(r=>r.status==="Concluída").length;
-        cell.innerHTML=`<div class='num'>${d.getDate()}</div>
+  function buildCalendar(){
+    const {mes,ano} = state;
+    $("#calTitle").textContent = `${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
+    const grid = $("#calGrid"); grid.innerHTML = "";
+    const first = new Date(ano,mes,1);
+    const startDay = (first.getDay()+7)%7;
+    const start = new Date(first); start.setDate(1-startDay);
+    for(let i=0;i<42;i++){
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      const inMonth = d.getMonth()===mes;
+      const cell = document.createElement("button");
+      cell.className = "cal-day" + (inMonth ? "" : " out");
+      const items = state.reservas.filter(r => r.datahora && ymd(new Date(r.datahora))===ymd(d));
+      const pend = items.filter(r => r.status==="Pendente").length;
+      const conc = items.filter(r => r.status==="Concluída").length;
+      cell.innerHTML = `<div class='num'>${d.getDate()}</div>
         <div class='tags'>
-        ${pend?`<span class='tag t-pend'>Pend: ${pend}</span>`:""}
-        ${conc?`<span class='tag t-done'>Conc: ${conc}</span>`:""}
+        ${pend ? `<span class='tag t-pend'>Pend: ${pend}</span>` : ""}
+        ${conc ? `<span class='tag t-done'>Conc: ${conc}</span>` : ""}
         </div>`;
-        cell.onclick=()=>openDayModal(d,items);
-        grid.appendChild(cell);
-      }
+      cell.onclick = () => openDayModal(d,items);
+      grid.appendChild(cell);
     }
+  }
 
-    function openDayModal(date,items){
-      $("#modalTitle").textContent=`Reservas de ${date.toLocaleDateString("pt-BR")}`;
-      const list=$("#modalList");
-      if(!items.length){list.innerHTML="<div class='hint'>Nenhuma reserva neste dia.</div>";}
-      else{
-        list.innerHTML=items.map(r=>{
-          const corCredito=r.status==="Crédito"?"credito":"";
-          return `<div class='res-item'><div class='row'><div class='name ${corCredito}'>${r.nome||"—"}</div>
+  function openDayModal(date,items){
+    $("#modalTitle").textContent = `Reservas de ${date.toLocaleDateString("pt-BR")}`;
+    const list = $("#modalList");
+    if(!items.length){
+      list.innerHTML = "<div class='hint'>Nenhuma reserva neste dia.</div>";
+    } else {
+      list.innerHTML = items.map(r=>{
+        const corCredito = r.status==="Crédito" ? "credito" : "";
+        return `<div class='res-item'>
+          <div class='row'><div class='name ${corCredito}'>${r.nome||"—"}</div>
           <span class='chip'>${r.status}</span></div>
-          <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas</div></div>`;
-        }).join("");
-      }
-      $("#dayModal").classList.add("show");
+          <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas</div>
+        </div>`;
+      }).join("");
     }
-    $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
+    $("#dayModal").classList.add("show");
+  }
+  $("#dayModal").onclick = e => { if(e.target.id==="dayModal") e.target.classList.remove("show"); };
 
-    // Form
-    $("#reservaForm").onsubmit=async e=>{
-      e.preventDefault();
-      const fd=new FormData(e.target);
-      const payload=Object.fromEntries(fd.entries());
-      payload.status="Pendente";
-      const res=await fetch(endpoint,{method:"POST",body:new URLSearchParams(payload)});
-      if(res.ok){toast("✅ Reserva salva!"); loadMonth(state.ano,state.mes); e.target.reset();}
-      else toast("Erro ao salvar!");
-    };
+  // ======== FORM ========
+  $("#reservaForm").onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    payload.status = "Pendente";
 
-    $("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
-    $("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
-    $("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes)};
+    // 🔸 Verificação de obrigatórios
+    const obrigatorios = [
+      "nome","email","telefone","pessoas",
+      "mesa","cardapio","datahora","valorEstimado","pagamentoAntecipado"
+    ];
+    for(const campo of obrigatorios){
+      if(!payload[campo]){
+        toast("⚠️ Preencha todos os campos obrigatórios!");
+        return;
+      }
+    }
 
+    const res = await fetch(endpoint, { method:"POST", body:new URLSearchParams(payload) });
+    if(res.ok){
+      toast("✅ Reserva salva!");
+      loadMonth(state.ano,state.mes);
+      e.target.reset();
+    } else {
+      toast("❌ Erro ao salvar!");
+    }
+  };
+
+  $("#prevMonth").onclick = () => {
+    const d = new Date(state.ano,state.mes-1);
+    state.mes = d.getMonth(); state.ano = d.getFullYear();
     loadMonth(state.ano,state.mes);
-  </script>
+  };
+  $("#nextMonth").onclick = () => {
+    const d = new Date(state.ano,state.mes+1);
+    state.mes = d.getMonth(); state.ano = d.getFullYear();
+    loadMonth(state.ano,state.mes);
+  };
+  $("#todayBtn").onclick = () => {
+    const d = new Date();
+    state.mes = d.getMonth(); state.ano = d.getFullYear();
+    loadMonth(state.ano,state.mes);
+  };
+
+  loadMonth(state.ano,state.mes);
+</script>
+
 </body>
 </html>
