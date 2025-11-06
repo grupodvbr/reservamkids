@@ -221,6 +221,25 @@
     buildCalendar();
   }
 
+async function loadMonth(a,m){
+  try{
+    const res = await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
+    const data = await res.json();
+
+    // 🔹 Corrige chave de data
+    state.reservas = data.map(r => ({
+      ...r,
+      status: r.status || r.Status || "Pendente",
+      datahora: r.datahora || r.DataHora // <-- adiciona esta linha
+    }));
+  }catch{
+    state.reservas = [];
+  }
+  buildCalendar();
+}
+
+
+    
   function buildCalendar(){
     const {mes,ano} = state;
     $("#calTitle").textContent = `${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
