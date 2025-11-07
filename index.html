@@ -1225,19 +1225,39 @@ async function onClickExcluir(e){
     $('#cancelFinish').addEventListener('click', ()=>{ finishModal.classList.remove('show'); finishId=null; });
     finishModal.addEventListener('click', (e)=>{ if(e.target===finishModal){ finishModal.classList.remove('show'); finishId=null; } });
 
-    $('#confirmFinish').addEventListener('click', async ()=>{
-      const v = parseBRL(finalPagoInput.value);
-      if(!(v>0)){ toast('Informe um valor válido.'); finalPagoInput.focus(); return; }
-      if(!finishId) return;
-      const resp = await api.concluir(finishId, v);
-      if(resp.ok){
-        toast('✅ ' + (resp.message||'Concluída'));
-        finishModal.classList.remove('show'); finishId=null;
-        await loadMonth(state.ano, state.mes);
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
-    });
+   $('#confirmFinish').addEventListener('click', async ()=>{
+  const v = parseBRL(finalPagoInput.value);
+  if(!(v>0)){ toast('Informe um valor válido.'); finalPagoInput.focus(); return; }
+  if(!finishId) return;
+
+  // 🧮 Busca a reserva original
+  const reserva = state.reservas.find(r => String(r.id) === String(finishId));
+  const antecipado = parseBRL(reserva?.pagamentoAntecipado || 0);
+  const estimado   = parseBRL(reserva?.valorEstimado || 0);
+
+  // 💰 Total pago = antecipado + final informado
+  const totalPago = antecipado + v;
+
+  // 🧾 Define novo status e prepara payload
+  const payload = {
+    valorFinalPago: String(totalPago),
+    status: 'Concluída'
+  };
+
+  // ⚙️ Atualiza via API
+  const resp = await api.atualizar(finishId, payload);
+
+  if (resp.ok) {
+    // Mostra resumo visual
+    toast(`✅ Reserva concluída! Total pago: ${formatBRL(totalPago)} (Antecipado ${formatBRL(antecipado)} + Final ${formatBRL(v)})`);
+    finishModal.classList.remove('show');
+    finishId = null;
+    await loadMonth(state.ano, state.mes);
+  } else {
+    toast('⚠️ ' + resp.message);
+  }
+});
+
 
     // Cancelar edição
     cancelEditBtn.addEventListener('click', ()=>{
