@@ -1480,51 +1480,87 @@ async function onClickExcluir(e){
     $('#nextMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()+1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#todayBtn').addEventListener('click', ()=>{ const t=new Date(); state.mes=t.getMonth(); state.ano=t.getFullYear(); refreshAll(); });
     $('#refreshBtn').addEventListener('click', ()=> refreshAll());
+async function loadMonth(ano, mes) {
+  const calGrid = document.getElementById('calGrid');
+  const calTitle = document.getElementById('calTitle');
 
-    async function loadMonth(ano, mes){
-  try{
+  try {
+    // Tenta consultar a API
     const data = await api.listar(ano, mes);
-    state.reservas = data.map((r,i)=> {
-      const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
 
-      // ✅ Monta a data/hora a partir das colunas separadas
+    if (!Array.isArray(data) || data.length === 0) {
+      calGrid.innerHTML = `
+        <div style="
+          grid-column: 1 / -1;
+          text-align: center;
+          color: #8a4fff;
+          font-weight: 700;
+          background: #fff8ff;
+          border: 2px dashed #ffd8f2;
+          border-radius: 16px;
+          padding: 20px;">
+          💡 Nenhuma reserva encontrada neste mês.
+        </div>`;
+      state.reservas = [];
+      updateSummary();
+      return;
+    }
+
+    // Se deu certo, popula o estado e monta o calendário
+    state.reservas = data.map((r, i) => {
+      const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? '';
       const dataCampo = r.data || r.Data || '';
       const horaIni = r.horaInicio || r.HoraInicio || '';
       const horaFim = r.horaFim || r.HoraFim || '';
       const dataHora = dataCampo ? `${dataCampo}T${horaIni || '00:00'}` : '';
-      const dataHoraFim = dataCampo ? `${dataCampo}T${horaFim || '00:00'}` : '';
 
       return {
         id: idReal || `ROW-${i+1}`,
-        _semIdReal: !idReal,
         nome: r.nome || r.Nome || '',
         email: r.email || r.Email || '',
-        telefone: r.telefone || r.Telefone || r.Fone || '',
+        telefone: r.telefone || r.Telefone || '',
         pessoas: r.pessoas || r.Pessoas || '',
-        mesa: r.mesa || r.Mesa || r.Local || '',
+        mesa: r.mesa || r.Mesa || '',
         cardapio: r.cardapio || r.Cardapio || '',
-        observacoes: r.observacoes || r.Observacoes || r.Obs || '',
         data: dataCampo,
         horaInicio: horaIni,
         horaFim: horaFim,
-        datahora: dataHora,       // usado no calendário
-        datahoraFim: dataHoraFim, // usado se quiser ampliar no futuro
+        datahora: dataHora,
         valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
         pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.PagamentoAntecipado ?? '0')),
         valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.ValorFinalPago ?? '0')),
         banco: r.banco || r.Banco || '',
         status: r.status || r.Status || 'Pendente',
-        ...r
+        observacoes: r.observacoes || r.Observacoes || ''
       };
     });
 
-  }catch(e){
-    state.reservas = [];
-    toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
-  }
+    buildCalendar();
+    updateSummary();
+  } catch (e) {
+    console.error("❌ Erro ao carregar mês:", e);
 
-  buildCalendar();
-  updateSummary();
+    // Mostra aviso visual dentro do calendário
+    calTitle.textContent = "Erro ao consultar dados";
+    calGrid.innerHTML = `
+      <div style="
+        grid-column: 1 / -1;
+        text-align: center;
+        background: #fff4f4;
+        color: #e11d48;
+        font-weight: bold;
+        padding: 20px;
+        border: 2px dashed #ffb4c4;
+        border-radius: 16px;">
+        ⚠️ Erro ao consultar os dados para o calendário.<br>
+        <small>${e.message}</small>
+      </div>`;
+      
+    // Zera os dados do estado
+    state.reservas = [];
+    updateSummary();
+    toast('⚠️ Erro ao consultar os dados para o calendário.');
+  }
 }
 
 // ... funções existentes de editar, concluir, excluir, etc ...
