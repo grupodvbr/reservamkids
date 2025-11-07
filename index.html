@@ -926,45 +926,36 @@ body.modal-open {
     /* ==============================
        Resumo mensal
     ============================== */
-function sumPagamentos(r){
-  // Soma todas as colunas que comecem com “Pagamento”
-  const keys = Object.keys(r||{}).filter(k =>
-    /^pagamento/i.test(k) && !/antecipado/i.test(k)
-  );
-  return keys.reduce((acc, k) => acc + parseBRL(r[k]), 0);
+function sumExtrasFromRecord(r){
+  const keys = Object.keys(r||{}).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
+  return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
 }
 
 function updateSummary(){
-  const { mes, ano } = state;
+  const {mes, ano} = state;
   const inMonth = state.reservas.filter(r=>{
     if(!r.datahora) return false;
     const d = new Date(r.datahora);
     return d.getMonth()===mes && d.getFullYear()===ano;
   });
 
-  const sum = (arr, fn) => arr.reduce((a,b)=>a+fn(b), 0);
+  const sum = (arr,fn)=> arr.reduce((a,b)=>a+fn(b),0);
 
-  // ✅ Antecipado = campo principal + todos os pagamentos
-  const adiantado = sum(inMonth, r => (r.pagamentoAntecipado || 0) + sumPagamentos(r));
-  const finalPago  = sum(inMonth, r => (r.valorFinalPago || 0));
+  // Já são números
+  const adiantado = sum(inMonth, r=> (r.pagamentoAntecipado||0) + sumExtrasFromRecord(r));
+  const finalPago = sum(inMonth, r=> (r.valorFinalPago||0));
 
-  // ✅ A receber = estimado - (antecipado + final pago)
-  const aReceber = sum(
-    inMonth.filter(r=> !['Concluída','Cancelada'].includes(r.status||'')),
-    r => {
-      const estimado = (r.valorEstimado || 0);
-      const pago = (r.pagamentoAntecipado || 0) + sumPagamentos(r) + (r.valorFinalPago || 0);
-      return Math.max(estimado - pago, 0);
-    }
-  );
+  const aReceber = sum(inMonth.filter(r=> !['Concluída','Cancelada'].includes(r.status||'')), r=>{
+    const estimado = (r.valorEstimado||0);
+    const pago = (r.pagamentoAntecipado||0) + sumExtrasFromRecord(r) + (r.valorFinalPago||0);
+    return Math.max(estimado - pago, 0);
+  });
 
-  // Atualiza KPIs
   $('#kpiAntecipado').textContent = formatBRL(adiantado);
-  $('#kpiFinalPago').textContent  = formatBRL(finalPago);
-  $('#kpiAReceber').textContent   = formatBRL(aReceber);
-  $('#kpiTotalMes').textContent   = formatBRL(adiantado + finalPago);
+  $('#kpiFinalPago').textContent = formatBRL(finalPago);
+  $('#kpiAReceber').textContent = formatBRL(aReceber);
+  $('#kpiTotalMes').textContent = formatBRL(adiantado + finalPago);
 }
-
 
 
 
@@ -1252,41 +1243,38 @@ async function onClickExcluir(e){
     $('#todayBtn').addEventListener('click', ()=>{ const t=new Date(); state.mes=t.getMonth(); state.ano=t.getFullYear(); refreshAll(); });
     $('#refreshBtn').addEventListener('click', ()=> refreshAll());
 
- async function loadMonth(ano, mes){
-  try {
-    const data = await api.listar(ano, mes);
-    state.reservas = data.map((r,i)=> {
-      const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
-      return {
-        id: idReal || `ROW-${i+1}`,
-        _semIdReal: !idReal,
-        nome: r.nome||r.Nome||'',
-        email: r.email||r.Email||'',
-        telefone: r.telefone || r.Telefone || r.Fone || '',
-        pessoas: r.pessoas||r.Pessoas||'',
-        mesa: r.mesa||r.Mesa||r.Local||'',
-        cardapio: r.cardapio||r.Cardapio||'',
-        observacoes: r.observacoes || r.Observacoes || r.Obs || '',
-        datahora: r.datahora || r.DataHora || r.data || r.Data || '',
-        valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
-        pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0')),
-        valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.FinalPago ?? '0')),
-        banco: r.banco || r.Banco || '',
-        status: r.status || r.Status || 'Pendente',
-        ...r
-      };
-    });
+    async function loadMonth(ano, mes){
+      try{
+        const data = await api.listar(ano, mes);
+state.reservas = data.map((r,i)=> {
+  const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
+  return {
+    id: idReal || `ROW-${i+1}`,
+    _semIdReal: !idReal,
+    nome: r.nome||r.Nome||'',
+    email:r.email||r.Email||'',
+    telefone: r.telefone || r.Telefone || r.Fone || '',
+    pessoas:r.pessoas||r.Pessoas||'',
+    mesa:r.mesa||r.Mesa||r.Local||'',
+    cardapio:r.cardapio||r.Cardapio||'',
+    observacoes: r.observacoes || r.Observacoes || r.Obs || '',
+    datahora: r.datahora || r.DataHora || r.data || r.Data || '',
+    valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
+    pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0')),
+    valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.FinalPago ?? '0')),
 
-    // ✅ Chama o resumo SOMENTE depois de popular e montar o calendário
-    buildCalendar();
-    updateSummary();
+    banco: r.banco || r.Banco || '',
+    status: r.status || r.Status || 'Pendente',
+    ...r
+  };
+});
 
-  } catch(e) {
-    state.reservas = [];
-    toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
-  }
-}
-
+      }catch(e){
+        state.reservas = [];
+        toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
+      }
+      buildCalendar(); updateSummary();
+    }
 
     function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
 // ... funções existentes de editar, concluir, excluir, etc ...
