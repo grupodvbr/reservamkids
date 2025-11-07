@@ -605,10 +605,19 @@ body.modal-open {
           </div>
         </div>
 
-        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
-        <input type="datetime-local" id="datahora" name="datahora" required />
-        <div class="hint">Não é permitido escolher data passada.</div>
-      </div>
+        <label>Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+<div class="inline-grid">
+  <div>
+    <label for="dataInicio">De:</label>
+    <input type="datetime-local" id="dataInicio" name="dataInicio" required />
+  </div>
+  <div>
+    <label for="dataFim">Até:</label>
+    <input type="datetime-local" id="dataFim" name="dataFim" required />
+  </div>
+</div>
+<div class="hint">Selecione o período da reserva (não pode ser no passado).</div>
+
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -1189,7 +1198,11 @@ function renderResItem(r) {
     const fileBox = $('#fileBox');
     const fileName = $('#fileName');
     const clearFile = $('#clearFile');
-    const inputData = $('#datahora');
+    const inputDataInicio = $('#dataInicio');
+const inputDataFim = $('#dataFim');
+inputDataInicio.min = nowLocalMin();
+inputDataFim.min = nowLocalMin();
+
 
     inputData.min = nowLocalMin();
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
@@ -1213,11 +1226,22 @@ function renderResItem(r) {
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
     function validateExtra(){
-      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
-      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
-      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
-      return true;
-    }
+  const inicio = new Date(inputDataInicio.value);
+  const fim = new Date(inputDataFim.value);
+  const agora = new Date();
+
+  if (inicio < agora) { toast('A data inicial não pode ser no passado.'); inputDataInicio.focus(); return false; }
+  if (fim <= inicio) { toast('A data final deve ser após a data inicial.'); inputDataFim.focus(); return false; }
+
+  const telDigits = inputTelefone.value.replace(/\D/g,'');
+  if (telDigits.length < 10) { toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
+
+  if (parseBRL(inputSinal.value) > 0 && !selectBanco.value) {
+    toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false;
+  }
+  return true;
+}
+
 
     form.addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -1269,12 +1293,18 @@ function renderResItem(r) {
 
 
     function collectPayload(){
-      const fd = new FormData(form);
-      const obj = Object.fromEntries(fd.entries());
-      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
-      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
-      return obj;
-    }
+  const fd = new FormData(form);
+  const obj = Object.fromEntries(fd.entries());
+  obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
+  obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
+
+  // adiciona período
+  obj.dataInicio = inputDataInicio.value;
+  obj.dataFim = inputDataFim.value;
+  obj.datahora = `${inputDataInicio.value} até ${inputDataFim.value}`;
+  return obj;
+}
+
 
     /* ==============================
        Ações: Editar / Concluir / Excluir
