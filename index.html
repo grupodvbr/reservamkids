@@ -1569,16 +1569,11 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
   }
 });
 
-
-
-
-   
-
-    // Inicialização
-    window.addEventListener('DOMContentLoaded', ()=>{
-      $('#datahora').min = nowLocalMin();
-      refreshAll();
-    });
+window.addEventListener('DOMContentLoaded', ()=>{
+  inputDataInicio.min = nowLocalMin();
+  inputDataFim.min = nowLocalMin();
+  refreshAll();
+});
 
 
 // ========== VISUALIZAR / BAIXAR OBSERVAÇÃO ==========
