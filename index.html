@@ -635,22 +635,34 @@ body.modal-open {
         </div>
       </div>
 
-      <div class="section">
-        <h3>📝 Observações & Comprovante</h3>
-        <div class="inline-grid">
-          <div>
-          </div>
-          <div>
-            <label for="arquivo">Comprovante (PDF, JPG ou PNG)</label>
-            <input id="arquivo" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-            <div class="file-box" id="fileBox" style="display:none; margin-top:8px">
-              <div class="file-name" id="fileName">—</div>
-              <button type="button" id="clearFile" class="btn btn-danger" style="width:auto">Remover</button>
-            </div>
-            <div class="hint">Tamanho máximo 5 MB.</div>
-          </div>
-        </div>
+ <div class="section">
+  <h3>📝 Observações & Comprovante</h3>
+  <div class="inline-grid">
+    <!-- Campo de observação -->
+    <div>
+      <label for="observacoes">Cardápio e observações</label>
+      <textarea id="observacoes" name="observacoes" rows="3"
+        placeholder="Cardápio, preferências, restrições, aniversariante, etc."></textarea>
+
+      <!-- Botão que abre o pop-up -->
+      <button type="button" id="abrirObsModal" class="btn btn-ghost" style="margin-top:6px;width:auto;">
+        📄 Visualizar / Baixar PDF
+      </button>
+    </div>
+
+    <!-- Upload do comprovante -->
+    <div>
+      <label for="arquivo">Comprovante (PDF, JPG ou PNG)</label>
+      <input id="arquivo" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+      <div class="file-box" id="fileBox" style="display:none; margin-top:8px">
+        <div class="file-name" id="fileName">—</div>
+        <button type="button" id="clearFile" class="btn btn-danger" style="width:auto">Remover</button>
       </div>
+      <div class="hint">Tamanho máximo 5 MB.</div>
+    </div>
+  </div>
+</div>
+
 
       <div class="section">
         <div class="row" style="justify-content:space-between">
@@ -1518,31 +1530,70 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
     });
 
 
-document.getElementById('baixarPDF').addEventListener('click', () => {
-  const obs = document.getElementById('observacoes').value.trim();
-  if (!obs) {
-    toast('Nada para exportar 😅');
+// ========== VISUALIZAR / BAIXAR OBSERVAÇÃO ==========
+const obsModal = document.getElementById('obsModal');
+const obsPreview = document.getElementById('obsPreview');
+const fecharObs = document.getElementById('fecharObs');
+const baixarObsPDF = document.getElementById('baixarObsPDF');
+
+// Abrir o pop-up de visualização
+document.getElementById('abrirObsModal').addEventListener('click', () => {
+  const texto = document.getElementById('observacoes').value.trim();
+  if (!texto) {
+    toast('Nenhuma observação encontrada 😅');
     return;
   }
 
-  // Cria janela com formatação bonitinha
-  const win = window.open('', '_blank');
-  win.document.write(`
-    <html><head><title>Observação da Reserva</title>
-    <style>
-      body { font-family: 'Comic Neue', cursive; background:#fffafc; padding:20px; color:#444; }
-      h3 { color:#ff4fa1; margin-bottom:4px; }
-      h4 { color:#8a4fff; margin-top:14px; margin-bottom:6px; }
-      ul { padding-left:20px; margin:4px 0; }
-      li { margin:3px 0; }
-      .total { text-align:right; color:#ff4fa1; font-weight:bold; margin-top:12px; }
-    </style></head><body>
-    ${obs.replace(/\n/g, '<br>')}
-    </body></html>
-  `);
-  win.document.close();
-  win.print();
+  obsPreview.innerHTML = `
+    <h3>Observações da Reserva</h3>
+    <p>${texto.replace(/\n/g, '<br>')}</p>
+  `;
+  obsModal.classList.add('show');
+  document.body.classList.add('modal-open');
 });
+
+// Fechar modal
+fecharObs.addEventListener('click', () => {
+  obsModal.classList.remove('show');
+  document.body.classList.remove('modal-open');
+});
+obsModal.addEventListener('click', e => {
+  if (e.target === obsModal) {
+    obsModal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+  }
+});
+
+// Baixar PDF a partir do modal
+baixarObsPDF.addEventListener('click', () => {
+  const texto = document.getElementById('observacoes').value.trim();
+  if (!texto) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(255, 79, 161);
+  doc.text('Observações da Reserva • M.KIDS', 105, 20, { align: 'center' });
+
+  doc.setDrawColor(255, 182, 193);
+  doc.line(20, 26, 190, 26);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(13);
+  doc.setTextColor(60, 60, 60);
+  const lines = doc.splitTextToSize(texto, 170);
+  doc.text(lines, 20, 40);
+
+  doc.setFontSize(10);
+  doc.setTextColor(138, 79, 255);
+  doc.text('Gerado pelo Painel de Reservas M.KIDS', 105, 280, { align: 'center' });
+
+  doc.save('Observacao_MKIDS.pdf');
+  toast('📄 PDF baixado com sucesso!');
+});
+
 
   </script>
 </body>
