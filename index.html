@@ -594,7 +594,7 @@ body.modal-open {
         <h3>📝 Observações & Comprovante</h3>
         <div class="inline-grid">
           <div>
-            <label for="observacoes">Observações</label>
+            <label for="observacoes">Cardápio e observações</label>
             <textarea id="observacoes" name="observacoes" rows="3" placeholder="Preferências, restrições, aniversariante, etc."></textarea>
           </div>
           <div>
@@ -1056,7 +1056,7 @@ function renderResItem(r) {
 
       <div class="meta"><b>Email:</b> ${r.email || '—'} • <b>Tel:</b> ${r.telefone || '—'}</div>
       <div class="meta"><b>Cardápio:</b> ${r.cardapio || '—'} • <b>Banco:</b> ${r.banco || '—'}</div>
-      <div class="meta"><b>Obs:</b> ${r.observacoes || '—'}</div>
+      <div class="meta"><b>Cardápio e observações:</b> ${r.observacoes || '—'}</div>
 
       <div class="meta">
         Estimado: ${formatBRL(estimado)} •
