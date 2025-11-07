@@ -126,20 +126,23 @@ label{font-weight:600;font-size:.9rem;color:#444;}
 </div>
 
 <script>
-const endpoint="https://script.google.com/macros/s/AKfycbzB537CEMsVPhx-yXAQ6NHVltwgXSU2sFLP5QV_zd2QrU5EIC6ZzuqgMY8RYW5uIOpc5w/exec";
+const endpoint="https://script.google.com/macros/s/AKfycby830QJTsGCICG7_94KI-07G6i69OGGLEoS9bEbVXlMRMGK4lgOS55sAvipBP1swpvyeg/exec";
 const $=s=>document.querySelector(s);
 const toast=msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);}
 const overlay=show=>$("#overlay").style.display=show?"flex":"none";
-const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:var(--rosa)'>${d}</div>`).join("");
 const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[],editId:null};
 
 async function loadMonth(a,m){overlay(true);
-  try{const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);const data=await res.json();
+  try{
+    const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
+    const data=await res.json();
     state.reservas=(Array.isArray(data)?data:[]).map(r=>({...r,status:(r.status||'Pendente').toLowerCase()}));
   }catch(e){state.reservas=[];}
   buildCalendar();updateSummary();overlay(false);
 }
+
+function sameDay(d1,d2){return d1.getFullYear()===d2.getFullYear()&&d1.getMonth()===d2.getMonth()&&d1.getDate()===d2.getDate();}
 
 function buildCalendar(){
   const {mes,ano}=state;
@@ -152,7 +155,10 @@ function buildCalendar(){
     const d=new Date(start);d.setDate(start.getDate()+i);
     const cell=document.createElement("div");
     cell.className="cal-day";
-    const items=state.reservas.filter(r=>r.datahora&&ymd(new Date(r.datahora))===ymd(d));
+    const items=state.reservas.filter(r=>{
+      const dh=r.datahora?new Date(r.datahora):null;
+      return dh&&sameDay(dh,d);
+    });
     const nomes=items.slice(0,5).map(r=>{
       const nome=r.nome?.split(" ")[0]||"?";
       const classe=r.status==="crédito"?"t-cred":"t-norm";
@@ -166,11 +172,15 @@ function buildCalendar(){
 
 function updateSummary(){
   const mes=state.mes,ano=state.ano;
-  const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano;});
+  const mesRes=state.reservas.filter(r=>{
+    const d=new Date(r.datahora);
+    return d.getMonth()===mes&&d.getFullYear()===ano;
+  });
   let ant=0,fin=0,total=0;
   mesRes.forEach(r=>{
     const a=+r.pagamentoAntecipado||0,f=+r.valorFinalPago||0,e=+r.valorEstimado||0,s=r.status;
-    ant+=a;fin+=f;if(s==="concluída"||s==="concluida")total+=f>0?f:e;else total+=e;
+    ant+=a;fin+=f;
+    if(s==="concluída"||s==="concluida")total+=f>0?f:e;else total+=e;
   });
   const rec=Math.max(total-(ant+fin),0);
   $("#kpiAntecipado").textContent=`R$ ${ant.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
@@ -188,7 +198,7 @@ function openDayModal(date,items){
     let btns="";
     if(r.status!=="concluída"&&r.status!=="concluida")btns+=`<button class='btn btn-green' onclick='finalizar("${r.id}")'>Finalizar</button>`;
     if(r.status!=="crédito")btns+=`<button class='btn btn-yellow' onclick='creditar("${r.id}")'>Crédito</button>`;
-    let anexBtn = r.arquivoURL ? `<a href="${r.arquivoURL}" target="_blank" class="btn btn-blue">📎 Ver Anexo</a>` : "";
+    let anexBtn=r.arquivoURL?`<a href="${r.arquivoURL}" target="_blank" class="btn btn-blue">📎 Ver Anexo</a>`:"";
     c.innerHTML+=`
     <div class='res-item'>
       <button class='edit-btn' onclick='editar("${r.id}")'>✏️</button>
@@ -213,50 +223,109 @@ async function finalizar(id){const val=prompt("Valor final pago:");if(!val)retur
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"concluir",id,valorFinalPago:val,status:"Concluída"})});
   toast("✅ Finalizado!");loadMonth(state.ano,state.mes);overlay(false);}
 
-async function creditar(id){overlay(true);
-  await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"status",id,status:"Crédito"})});
-  toast("💚 Marcado como crédito!");loadMonth(state.ano,state.mes);overlay(false);}
+  async function creditar(id){
+  overlay(true);
+  await fetch(endpoint,{
+    method:"POST",
+    body:new URLSearchParams({acao:"status",id,status:"Crédito"})
+  });
+  toast("💳 Marcado como Crédito!");
+  loadMonth(state.ano,state.mes);
+  overlay(false);
+}
 
-async function excluir(id){if(!confirm("Excluir?"))return;overlay(true);
-  await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"excluir",id})});
-  toast("🗑️ Excluído!");loadMonth(state.ano,state.mes);overlay(false);}
+async function excluir(id){
+  if(!confirm("Deseja realmente excluir esta reserva?")) return;
+  overlay(true);
+  await fetch(endpoint,{
+    method:"POST",
+    body:new URLSearchParams({acao:"excluir",id})
+  });
+  toast("🗑️ Reserva excluída!");
+  loadMonth(state.ano,state.mes);
+  overlay(false);
+}
 
 function editar(id){
   const r=state.reservas.find(x=>x.id===id);
-  if(!r)return;
+  if(!r) return;
   $("#formTitle").textContent="✏️ Editar Reserva";
   $("#saveBtn").textContent="Atualizar";
   state.editId=id;
-  for(const k in r){const el=$("#reservaForm [name='"+k+"']");if(el)el.value=r[k];}
+  for(const k in r){
+    const el=$("#reservaForm [name='"+k+"']");
+    if(el){
+      if(el.type==="file") continue;
+      el.value=r[k]||"";
+    }
+  }
   $("#formModal").classList.add("show");
 }
 
 $("#cancelForm").onclick=()=>$("#formModal").classList.remove("show");
 
 $("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();overlay(true);
+  e.preventDefault();
+  overlay(true);
   const fd=new FormData(e.target);
-  let nomeArquivo="", arquivoURL="";
-  const file=fd.get("file");
-  if(file && file.size>0){
-    const up=new FormData();up.append("acao","upload");up.append("file",file);
-    const res=await fetch(endpoint,{method:"POST",body:up});const j=await res.json();
-    if(j.ok){nomeArquivo=j.nomeArquivo;arquivoURL=j.arquivoURL;}
+
+  // Upload do comprovante (se houver)
+  const fileInput=e.target.querySelector('[name="file"]');
+  if(fileInput && fileInput.files.length>0){
+    const upData=new FormData();
+    upData.append("acao","upload");
+    upData.append("file",fileInput.files[0]);
+    const upRes=await fetch(endpoint,{method:"POST",body:upData});
+    const upJson=await upRes.json();
+    if(upJson.ok){
+      fd.append("nomeArquivo",upJson.nomeArquivo);
+      fd.append("arquivoURL",upJson.arquivoURL);
+    }
   }
-  fd.delete("file");fd.append("acao",state.editId?"editar":"cadastrar");
-  if(nomeArquivo)fd.append("nomeArquivo",nomeArquivo);
-  if(arquivoURL)fd.append("arquivoURL",arquivoURL);
+
+  fd.append("acao",state.editId?"editar":"cadastrar");
+  if(state.editId) fd.append("id",state.editId);
+
   await fetch(endpoint,{method:"POST",body:fd});
-  toast(state.editId?"✏️ Atualizado!":"✅ Salvo!");
-  $("#formModal").classList.remove("show");e.target.reset();state.editId=null;
-  loadMonth(state.ano,state.mes);overlay(false);
+  toast(state.editId?"✏️ Atualizado!":"✅ Salvo com sucesso!");
+  $("#formModal").classList.remove("show");
+  e.target.reset();
+  state.editId=null;
+  loadMonth(state.ano,state.mes);
+  overlay(false);
 };
 
-$("#newBtn").onclick=()=>{state.editId=null;$("#formTitle").textContent="🎈 Nova Reserva";$("#saveBtn").textContent="Salvar";$("#reservaForm").reset();$("#formModal").classList.add("show");}
-$("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
-$("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
-$("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
+$("#newBtn").onclick=()=>{
+  state.editId=null;
+  $("#formTitle").textContent="🎈 Nova Reserva";
+  $("#saveBtn").textContent="Salvar";
+  $("#reservaForm").reset();
+  $("#formModal").classList.add("show");
+};
+
+$("#prevMonth").onclick=()=>{
+  const d=new Date(state.ano,state.mes-1);
+  state.mes=d.getMonth();
+  state.ano=d.getFullYear();
+  loadMonth(state.ano,state.mes);
+};
+
+$("#nextMonth").onclick=()=>{
+  const d=new Date(state.ano,state.mes+1);
+  state.mes=d.getMonth();
+  state.ano=d.getFullYear();
+  loadMonth(state.ano,state.mes);
+};
+
+$("#todayBtn").onclick=()=>{
+  const d=new Date();
+  state.mes=d.getMonth();
+  state.ano=d.getFullYear();
+  loadMonth(state.ano,state.mes);
+};
+
 window.onload=()=>loadMonth(state.ano,state.mes);
 </script>
 </body>
 </html>
+
