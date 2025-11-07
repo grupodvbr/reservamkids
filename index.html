@@ -239,16 +239,10 @@ textarea {
 }
 
 .cal-title {
-  text-align: center;
-  letter-spacing: 1px;
-  margin-top: 8px;
-  font-size: 2.4rem; /* ✅ aumenta o tamanho */
-  color: #ff3f9f;
-  font-weight: 900;
-  text-shadow: 2px 2px 0 #fff, 0 0 10px rgba(255,182,193,0.7);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #ff4fa1;
 }
-
-
 
 .cal-grid {
   display: grid;
@@ -710,8 +704,18 @@ body.modal-open {
               style="padding:4px 8px; border-radius:50%; font-size:0.8rem; color:#8a4fff;">▶</button>
     </div>
   </div>
+
+  <div id="calTitle"
+       style="text-align:center; margin-top:4px; font-size:0.9rem; font-weight:800; color:#8a4fff;
+              text-shadow:1px 1px 0 #fff;">
+  </div>
 </div>
-<div class="cal">
+
+  <div class="cal-title" id="calTitle" style="font-weight:800; color:#8a4fff; font-size:0.9rem;"></div>
+</div>
+
+
+      <div class="cal">
         <div class="cal-head">
           <div class="cal-title" id="calTitle">—</div>
         </div>
