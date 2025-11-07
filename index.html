@@ -611,22 +611,10 @@ body.modal-open {
           </div>
         </div>
 
-        <label for="data">Data da Reserva <span style="color:var(--danger)">*</span></label>
-<input type="date" id="data" name="data" required />
-
-<div class="inline-grid" style="margin-top:10px;">
-  <div>
-    <label for="horaInicio">Hora de Início <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaInicio" name="horaInicio" required />
-  </div>
-  <div>
-    <label for="horaFim">Hora de Término <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaFim" name="horaFim" required />
-  </div>
-</div>
-
-<div class="hint">A hora de término deve ser posterior à de início.</div>
-
+        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+        <input type="datetime-local" id="datahora" name="datahora" required />
+        <div class="hint">Não é permitido escolher data passada.</div>
+      </div>
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -1221,14 +1209,6 @@ function renderResItem(r) {
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
     function validateExtra(){
-      const hIni = document.getElementById('horaInicio').value;
-const hFim = document.getElementById('horaFim').value;
-
-if (hIni && hFim && hFim <= hIni) {
-  toast('O horário de término deve ser posterior ao de início.');
-  document.getElementById('horaFim').focus();
-  return false;
-}
       if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
       const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
       if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
@@ -1240,11 +1220,6 @@ if (hIni && hFim && hFim <= hIni) {
   if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; }
   if(!validateExtra()) return;
   spinner.classList.add('show'); submitBtn.disabled = true;
- const data = document.getElementById('data').value;
-const hIni = document.getElementById('horaInicio').value;
-if (data && hIni) {
-  document.getElementById('datahora').value = `${data}T${hIni}`;
-}
 
   const payload = collectPayload();
   const file = inputArquivo.files[0];
