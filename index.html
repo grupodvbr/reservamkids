@@ -857,11 +857,28 @@ body.modal-open {
     </div>
   </div>
 </div>
+  <!-- Modal de Edição -->
+  ...seu código do editModal aqui...
+
+  <!-- Modal de Observações -->
+  <div class="modal" id="obsModal" aria-hidden="true">
+    <div class="sheet">
+      <h3 style="color:#ff4fa1;margin-top:0;">📝 Visualizar Observação</h3>
+      <div id="obsPreview" class="obs-formatada"></div>
+      <div class="toolbar" style="justify-content:flex-end;margin-top:12px;">
+        <button id="fecharObs" class="btn btn-ghost" style="width:auto;">Fechar</button>
+        <button id="baixarObsPDF" class="btn btn-primary" style="width:auto;">📄 Baixar PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
 
 
   <div id="toast" class="toast"></div>
 
-  <script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
     /* ==============================
        Config
     ============================== */
@@ -1595,6 +1612,6 @@ baixarObsPDF.addEventListener('click', () => {
 });
 
 
-  </script>
+</script>
 </body>
 </html>
