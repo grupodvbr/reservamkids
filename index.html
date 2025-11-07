@@ -999,10 +999,14 @@ body.modal-open {
         cell.className = 'cal-day' + (inMonth? '':' out');
         cell.dataset.date = ymd(d);
 
-        const items = state.reservas.filter(r=>{
-  const dh = r.datahora || r.DataHora || '';
-  return dh && ymd(new Date(dh)) === ymd(d);
+       const items = state.reservas.filter(r=>{
+  const dataCampo = r.data || r.Data || '';
+  const horaCampo = r.horaInicio || r.HoraInicio || '';
+  if (!dataCampo) return false;
+  const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
+  return ymd(new Date(dataHora)) === ymd(d);
 });
+
 
 
         // Agrupar por setor e colorir VIP vs OUTROS
@@ -1060,13 +1064,15 @@ function updateSummary() {
   }
 
   const { mes, ano } = state;
+const reservasMes = state.reservas.filter(r => {
+  const dataCampo = r.data || r.Data || '';
+  const horaCampo = r.horaInicio || r.HoraInicio || '';
+  if (!dataCampo) return false;
+  const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
+  const d = new Date(dataHora);
+  return d.getMonth() === mes && d.getFullYear() === ano;
+});
 
-  // Filtra as reservas do mês atual
-  const reservasMes = state.reservas.filter(r => {
-    if (!r.datahora) return false;
-    const d = new Date(r.datahora);
-    return d.getMonth() === mes && d.getFullYear() === ano;
-  });
 
   const parse = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
