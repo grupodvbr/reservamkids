@@ -605,10 +605,20 @@ body.modal-open {
           </div>
         </div>
 
-        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
-        <input type="datetime-local" id="datahora" name="datahora" required />
-        <div class="hint">Não é permitido escolher data passada.</div>
-      </div>
+        <label for="datahora">Data e Horário da Reserva <span style="color:var(--danger)">*</span></label>
+<div class="inline-grid">
+  <div>
+    <input type="date" id="data" name="data" required />
+  </div>
+  <div>
+    <input type="time" id="horaInicio" name="horaInicio" required />
+  </div>
+  <div>
+    <input type="time" id="horaFim" name="horaFim" required />
+  </div>
+</div>
+<div class="hint">Selecione a data e o intervalo de horário (início e fim).</div>
+
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -1226,6 +1236,23 @@ function renderResItem(r) {
   spinner.classList.add('show'); submitBtn.disabled = true;
 
   const payload = collectPayload();
+   const data = document.getElementById('data').value;
+const hIni = document.getElementById('horaInicio').value;
+const hFim = document.getElementById('horaFim').value;
+
+// validações simples
+if (!data || !hIni || !hFim) {
+  toast('Preencha data e horários.');
+  return;
+}
+if (hFim <= hIni) {
+  toast('O horário de término deve ser posterior ao de início.');
+  return;
+}
+
+// junta tudo no mesmo formato
+const dataHora = `${data} ${hIni} até ${hFim}`;
+
   const file = inputArquivo.files[0];
 
   if (file) {
