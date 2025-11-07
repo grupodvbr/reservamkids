@@ -980,6 +980,44 @@ body.modal-open {
     const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const calTitle = $('#calTitle'), calDow = $('#calDow'), calGrid = $('#calGrid');
+      /* ========== OVERLAY DE CARREGAMENTO ========== */
+const overlay = document.createElement('div');
+overlay.id = 'calOverlay';
+overlay.innerHTML = `
+  <div style="
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.75);
+    backdrop-filter:blur(3px);
+    font-weight:700; color:#ff4fa1;
+    font-size:1.1rem; border-radius:20px;">
+    ⏳ Carregando reservas...
+  </div>`;
+overlay.style.display = 'none';
+overlay.style.position = 'absolute';
+overlay.style.inset = 0;
+overlay.style.borderRadius = '20px';
+$('#calGrid').parentElement.style.position = 'relative';
+$('#calGrid').parentElement.appendChild(overlay);
+
+function showOverlay(msg="Carregando reservas...") {
+  overlay.innerHTML = `
+    <div style="
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.75);
+      backdrop-filter:blur(3px);
+      font-weight:700; color:#ff4fa1;
+      font-size:1.1rem; border-radius:20px;">
+      ${msg}
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+function hideOverlay() {
+  overlay.style.display = 'none';
+}
+
     calDow.innerHTML = dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
     function buildCalendar(){
@@ -1484,12 +1522,16 @@ async function loadMonth(ano, mes) {
   const calGrid = document.getElementById('calGrid');
   const calTitle = document.getElementById('calTitle');
 
+  // Mostra o calendário vazio e o overlay de carregamento
+  buildCalendar();
+  showOverlay('⏳ Carregando reservas...');
+
   try {
-    // Tenta consultar a API
     const data = await api.listar(ano, mes);
+    hideOverlay();
 
     if (!Array.isArray(data) || data.length === 0) {
-      calGrid.innerHTML = `
+      calGrid.innerHTML += `
         <div style="
           grid-column: 1 / -1;
           text-align: center;
@@ -1506,62 +1548,37 @@ async function loadMonth(ano, mes) {
       return;
     }
 
-    // Se deu certo, popula o estado e monta o calendário
-    state.reservas = data.map((r, i) => {
-      const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? '';
-      const dataCampo = r.data || r.Data || '';
-      const horaIni = r.horaInicio || r.HoraInicio || '';
-      const horaFim = r.horaFim || r.HoraFim || '';
-      const dataHora = dataCampo ? `${dataCampo}T${horaIni || '00:00'}` : '';
-
-      return {
-        id: idReal || `ROW-${i+1}`,
-        nome: r.nome || r.Nome || '',
-        email: r.email || r.Email || '',
-        telefone: r.telefone || r.Telefone || '',
-        pessoas: r.pessoas || r.Pessoas || '',
-        mesa: r.mesa || r.Mesa || '',
-        cardapio: r.cardapio || r.Cardapio || '',
-        data: dataCampo,
-        horaInicio: horaIni,
-        horaFim: horaFim,
-        datahora: dataHora,
-        valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
-        pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.PagamentoAntecipado ?? '0')),
-        valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.ValorFinalPago ?? '0')),
-        banco: r.banco || r.Banco || '',
-        status: r.status || r.Status || 'Pendente',
-        observacoes: r.observacoes || r.Observacoes || ''
-      };
-    });
+    // popula estado e redesenha com os dados
+    state.reservas = data.map((r, i) => ({
+      id: r.id ?? r.ID ?? `ROW-${i+1}`,
+      nome: r.nome || r.Nome || '',
+      email: r.email || r.Email || '',
+      telefone: r.telefone || r.Telefone || '',
+      pessoas: r.pessoas || r.Pessoas || '',
+      mesa: r.mesa || r.Mesa || '',
+      cardapio: r.cardapio || r.Cardapio || '',
+      data: r.data || r.Data || '',
+      horaInicio: r.horaInicio || r.HoraInicio || '',
+      horaFim: r.horaFim || r.HoraFim || '',
+      valorEstimado: parseBRL(r.valorEstimado || r.ValorEstimado || '0'),
+      pagamentoAntecipado: parseBRL(r.pagamentoAntecipado || r.PagamentoAntecipado || '0'),
+      valorFinalPago: parseBRL(r.valorFinalPago || r.ValorFinalPago || '0'),
+      banco: r.banco || r.Banco || '',
+      status: r.status || r.Status || 'Pendente',
+      observacoes: r.observacoes || r.Observacoes || ''
+    }));
 
     buildCalendar();
     updateSummary();
   } catch (e) {
     console.error("❌ Erro ao carregar mês:", e);
-
-    // Mostra aviso visual dentro do calendário
-    calTitle.textContent = "Erro ao consultar dados";
-    calGrid.innerHTML = `
-      <div style="
-        grid-column: 1 / -1;
-        text-align: center;
-        background: #fff4f4;
-        color: #e11d48;
-        font-weight: bold;
-        padding: 20px;
-        border: 2px dashed #ffb4c4;
-        border-radius: 16px;">
-        ⚠️ Erro ao consultar os dados para o calendário.<br>
-        <small>${e.message}</small>
-      </div>`;
-      
-    // Zera os dados do estado
+    showOverlay(`⚠️ Erro ao carregar dados<br><small>${e.message}</small>`);
     state.reservas = [];
     updateSummary();
     toast('⚠️ Erro ao consultar os dados para o calendário.');
   }
 }
+
 
 // ... funções existentes de editar, concluir, excluir, etc ...
 
