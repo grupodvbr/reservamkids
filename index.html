@@ -1506,7 +1506,12 @@ state.reservas = data.map((r,i)=> {
       buildCalendar(); updateSummary();
     }
 
-    function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
+    async function refreshAll() {
+  await loadMonth(state.ano, state.mes);
+  buildCalendar();
+  updateSummary();
+}
+
 // ... funções existentes de editar, concluir, excluir, etc ...
 
 /* ========== MODAL DE EDIÇÃO: SALVAR / ABRIR / CANCELAR ========== */
