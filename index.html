@@ -1688,12 +1688,16 @@ function gerarPDFReserva(r) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.setTextColor(60, 60, 60);
+     const periodo = (r.datahora || '').includes('até')
+    ? r.datahora.replace('T', ' ').replace('até', 'até')
+    : new Date(r.datahora).toLocaleString('pt-BR');
+
 
   const detalhes = [
     `Nome: ${r.nome || ''}`,
     `E-mail: ${r.email || ''}`,
     `Telefone: ${r.telefone || ''}`,
-    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
+    `Período: ${periodo}`,
     `Local: ${r.mesa || ''}`,
     `Pessoas: ${r.pessoas || ''}`,
     `Cardápio: ${r.cardapio || ''}`,
