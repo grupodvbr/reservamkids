@@ -485,6 +485,51 @@ body.modal-open {
   overflow: hidden; /* trava rolagem do fundo */
 }
 
+   .obs-formatada {
+  background: #fffafc;
+  border: 2px dashed #ffd8f2;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-top: 10px;
+  font-family: 'Comic Neue', cursive;
+  font-size: 15px;
+  color: #4b4b4b;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(255,182,193,0.15);
+}
+
+.obs-formatada h3 {
+  margin-top: 0;
+  color: #ff4fa1;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.obs-formatada h4 {
+  color: #8a4fff;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+
+.obs-formatada ul {
+  padding-left: 18px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.obs-formatada li {
+  margin: 3px 0;
+}
+
+.obs-formatada .total {
+  text-align: right;
+  color: #ff4fa1;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 12px;
+}
+
 
 </style>
 </head>
@@ -596,6 +641,14 @@ body.modal-open {
           <div>
             <label for="observacoes">Cardápio e observações</label>
             <textarea id="observacoes" name="observacoes" rows="3" placeholder="Cardápio, preferências, restrições, etc."></textarea>
+                   <label for="observacoes">Observações</label>
+      <textarea id="observacoes" name="observacoes" rows="3" placeholder="Preferências, restrições, aniversariante, etc."></textarea>
+
+      <!-- ✅ Botão para baixar PDF -->
+      <button type="button" id="baixarPDF" class="btn btn-ghost" style="margin-top:6px;width:auto;">
+        📄 Baixar Observação em PDF
+      </button>
+
           </div>
           <div>
             <label for="arquivo">Comprovante (PDF, JPG ou PNG)</label>
@@ -1473,6 +1526,34 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
       $('#datahora').min = nowLocalMin();
       refreshAll();
     });
+
+
+document.getElementById('baixarPDF').addEventListener('click', () => {
+  const obs = document.getElementById('observacoes').value.trim();
+  if (!obs) {
+    toast('Nada para exportar 😅');
+    return;
+  }
+
+  // Cria janela com formatação bonitinha
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Observação da Reserva</title>
+    <style>
+      body { font-family: 'Comic Neue', cursive; background:#fffafc; padding:20px; color:#444; }
+      h3 { color:#ff4fa1; margin-bottom:4px; }
+      h4 { color:#8a4fff; margin-top:14px; margin-bottom:6px; }
+      ul { padding-left:20px; margin:4px 0; }
+      li { margin:3px 0; }
+      .total { text-align:right; color:#ff4fa1; font-weight:bold; margin-top:12px; }
+    </style></head><body>
+    ${obs.replace(/\n/g, '<br>')}
+    </body></html>
+  `);
+  win.document.close();
+  win.print();
+});
+
   </script>
 </body>
 </html>
