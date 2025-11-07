@@ -5,12 +5,13 @@
 <title>🎈 Painel de Reservas • M.Kids</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-:root {
-  --rosa:#f472b6; --azul:#60a5fa; --verde:#34d399; --amarelo:#facc15;
-  --bg:#fff7fb; --card:#fff; --muted:#666; --line:#eee; --radius:14px;
+:root{
+  --rosa:#f472b6;--azul:#60a5fa;--verde:#34d399;--amarelo:#facc15;
+  --bg:#fff7fb;--card:#fff;--muted:#666;--line:#eee;--radius:14px;
 }
-body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0;color:#333;}
-.wrap{max-width:1180px;margin:auto;padding:24px;}
+*::-webkit-scrollbar{display:none;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0;color:#333;overflow:hidden;}
+.wrap{max-width:1180px;margin:auto;padding:24px;overflow:hidden;}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .title{font-weight:900;color:var(--rosa);font-size:1.6rem;}
 .badge{background:linear-gradient(90deg,var(--azul),var(--rosa));color:#fff;padding:6px 12px;border-radius:20px;}
@@ -19,17 +20,19 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .card-head h2{margin:0;font-size:1rem;color:var(--rosa);}
 .cal{padding:16px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.cal-day{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:95px;cursor:pointer;transition:.1s;}
+.cal-day{border:1px solid var(--line);border-radius:12px;padding:8px;min-height:95px;cursor:pointer;transition:.15s;overflow:hidden;}
 .cal-day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.1);}
 .num{font-weight:700;font-size:.9rem;}
-.tag{display:inline-block;font-size:.75rem;padding:3px 6px;border-radius:10px;margin-top:4px;}
-.t-pend{background:#fef9c3;color:#92400e;}
-.t-done{background:#dbeafe;color:#1e3a8a;}
+.tag{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:8px;margin:1px 2px 0 0;white-space:nowrap;}
+.t-norm{background:#dbeafe;color:#1e3a8a;}
+.t-cred{background:#dcfce7;color:#166534;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;}
 .modal.show{display:flex;}
-.sheet{background:#fff;border-radius:18px;padding:20px;max-width:600px;width:90%;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+.sheet{background:#fff;border-radius:18px;padding:20px;max-width:620px;width:90%;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25);animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .res-item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
-.btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+.btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;transition:.15s;}
+.btn:hover{opacity:.85;}
 .btn-pink{background:var(--rosa);color:#fff;}
 .btn-blue{background:var(--azul);color:#fff;}
 .btn-green{background:var(--verde);color:#fff;}
@@ -47,20 +50,20 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .kpi-final{background:linear-gradient(90deg,#34d399,#10b981);}
 .kpi-receber{background:linear-gradient(90deg,#fcd34d,#fbbf24);}
 .kpi-total{background:linear-gradient(90deg,#f472b6,#ec4899);}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);}
-label{font-weight:600;font-size:.9rem;color:#444;}
-.modal-form .sheet{max-width:720px;}
-.section{margin-bottom:14px;}
+.overlay-load{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:1000;transition:opacity .3s;}
+.spinner{border:5px solid #eee;border-top:5px solid var(--rosa);border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+<div class="overlay-load" id="overlay"><div class="spinner"></div></div>
+
 <div class="wrap">
 <header>
   <div class="title">📍 Reservas • M.Kids</div>
   <div class="badge">Calendário & Gerenciamento</div>
 </header>
 
-<!-- CALENDÁRIO -->
 <div class="card">
   <div class="card-head">
     <h2>Calendário de Reservas</h2>
@@ -78,7 +81,6 @@ label{font-weight:600;font-size:.9rem;color:#444;}
   </div>
 </div>
 
-<!-- CARDS RESUMO -->
 <div class="summary-cards">
   <div class="kpi-card kpi-antecipado"><h4>💰 Antecipado</h4><div class="valor" id="kpiAntecipado">R$ 0,00</div></div>
   <div class="kpi-card kpi-final"><h4>🧾 Final Pago</h4><div class="valor" id="kpiFinalPago">R$ 0,00</div></div>
@@ -86,76 +88,8 @@ label{font-weight:600;font-size:.9rem;color:#444;}
   <div class="kpi-card kpi-total"><h4>🎯 Total do Mês</h4><div class="valor" id="kpiTotalMes">R$ 0,00</div></div>
 </div>
 
-<!-- MODAL DETALHES DA RESERVA -->
-<div class="modal" id="dayModal">
-  <div class="sheet" id="dayContent"></div>
-</div>
-
-<!-- MODAL NOVA RESERVA -->
-<div class="modal modal-form" id="newModal">
-  <div class="sheet">
-    <h3>🎈 Nova Reserva</h3>
-    <form id="reservaForm">
-      <div class="section">
-        <label>Nome Completo</label>
-        <input name="nome" required />
-      </div>
-      <div class="section">
-        <label>Email</label>
-        <input name="email" type="email" />
-      </div>
-      <div class="section">
-        <label>Telefone</label>
-        <input name="telefone" type="tel" placeholder="(99) 99999-9999" required />
-      </div>
-      <div class="section">
-        <label>Local da Reserva</label>
-        <select name="mesa" required>
-          <option>Sala de Festa</option>
-          <option>Sala VIP</option>
-          <option>Salão Central</option>
-          <option>Sacada</option>
-        </select>
-      </div>
-      <div class="section">
-        <label>Cardápio</label>
-        <input name="cardapio" placeholder="Ex: Buffet Kids" />
-      </div>
-      <div class="section">
-        <label>Quantidade de Pessoas</label>
-        <input name="pessoas" type="number" min="1" required />
-      </div>
-      <div class="section">
-        <label>Data e Hora</label>
-        <input name="datahora" type="datetime-local" required />
-      </div>
-      <div class="section">
-        <label>Valor Estimado (R$)</label>
-        <input name="valorEstimado" type="number" step="0.01" />
-      </div>
-      <div class="section">
-        <label>Pagamento Antecipado (R$)</label>
-        <input name="pagamentoAntecipado" type="number" step="0.01" />
-      </div>
-      <div class="section">
-        <label>Banco / Método</label>
-        <select name="banco">
-          <option value="">Selecione</option>
-          <option>Pix</option><option>Cartão</option><option>Dinheiro</option>
-        </select>
-      </div>
-      <div class="section">
-        <label>Observações</label>
-        <textarea name="observacoes"></textarea>
-      </div>
-      <div class="row" style="justify-content:flex-end;">
-        <button type="button" class="btn btn-del" id="cancelNew">Cancelar</button>
-        <button type="submit" class="btn btn-green">Salvar</button>
-      </div>
-    </form>
-  </div>
-</div>
-
+<div class="modal" id="dayModal"><div class="sheet" id="dayContent"></div></div>
+<div class="modal modal-form" id="newModal"><div class="sheet" id="formContent"></div></div>
 <div id="toast" class="toast"></div>
 </div>
 
@@ -166,9 +100,10 @@ const toast=msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");
 const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 $("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:var(--rosa)'>${d}</div>`).join("");
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[],finishId:null};
+const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
 
 async function loadMonth(a,m){
+  $("#overlay").style.display="flex";
   const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
   const data=await res.json();
   state.reservas=data.map(r=>({
@@ -177,9 +112,11 @@ async function loadMonth(a,m){
     cardapio:r.cardapio||'',observacoes:r.observacoes||'',
     datahora:r.datahora||r.DataHora||'',valorEstimado:+(r.valorEstimado||0),
     pagamentoAntecipado:+(r.pagamentoAntecipado||0),valorFinalPago:+(r.valorFinalPago||0),
-    status:r.status||'Pendente'
+    status:(r.status||'Pendente').toLowerCase()
   }));
   buildCalendar();updateSummary();
+  setTimeout(()=>$("#overlay").style.opacity="0",300);
+  setTimeout(()=>$("#overlay").style.display="none",600);
 }
 function buildCalendar(){
   const {mes,ano}=state;
@@ -194,64 +131,45 @@ function buildCalendar(){
     const cell=document.createElement("div");
     cell.className="cal-day"+(inMonth?"":" out");
     const items=state.reservas.filter(r=>r.datahora&&ymd(new Date(r.datahora))===ymd(d));
-    const nome=items[0]?items[0].nome.split(" ")[0]:"";
-    cell.innerHTML=`<div class='num'>${d.getDate()}</div>${nome?`<div class='tag t-done'>${nome}</div>`:""}`;
+    const nomes=items.slice(0,5).map(r=>{
+      const nome=r.nome.split(" ")[0];
+      const classe=r.status==="crédito"?"t-cred":"t-norm";
+      return `<span class="tag ${classe}">${nome}</span>`;
+    }).join("");
+    cell.innerHTML=`<div class='num'>${d.getDate()}</div>${nomes}`;
     cell.onclick=()=>openDayModal(d,items);
     grid.appendChild(cell);
   }
 }
-function updateSummary() {
-  const mes = state.mes, ano = state.ano;
-
-  // 🔹 Pega só as reservas do mês atual
-  const mesRes = state.reservas.filter(r => {
-    const d = new Date(r.datahora);
-    return d.getMonth() === mes && d.getFullYear() === ano;
+function updateSummary(){
+  const mes=state.mes,ano=state.ano;
+  const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano;});
+  let ant=0,fin=0,total=0;
+  mesRes.forEach(r=>{
+    const a=r.pagamentoAntecipado||0,f=r.valorFinalPago||0,e=r.valorEstimado||0,s=r.status;
+    ant+=a;fin+=f;
+    if(s==="concluída"||s==="concluida")total+=f>0?f:e;else total+=e;
   });
-
-  // 🔹 Valores
-  let antecipado = 0;
-  let finalPago = 0;
-  let totalMes = 0;
-
-  mesRes.forEach(r => {
-    const valorAnt = r.pagamentoAntecipado || 0;
-    const valorFin = r.valorFinalPago || 0;
-    const valorEst = r.valorEstimado || 0;
-    const status = (r.status || '').toLowerCase();
-
-    antecipado += valorAnt;
-    finalPago  += valorFin;
-
-    // ✅ Se a reserva está concluída, considera o valor pago;
-    // caso contrário, considera o valor estimado.
-    if (status === 'concluída' || status === 'concluida') {
-      totalMes += valorFin > 0 ? valorFin : valorEst;
-    } else {
-      totalMes += valorEst;
-    }
-  });
-
-  // 🔹 A Receber = Total real - (Antecipado + Pago)
-  const aReceber = Math.max(totalMes - (antecipado + finalPago), 0);
-
-  // 🔹 Atualiza os cards
-  $("#kpiAntecipado").textContent = `R$ ${antecipado.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiFinalPago").textContent  = `R$ ${finalPago.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiAReceber").textContent   = `R$ ${aReceber.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiTotalMes").textContent   = `R$ ${totalMes.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const rec=Math.max(total-(ant+fin),0);
+  $("#kpiAntecipado").textContent=`R$ ${ant.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiFinalPago").textContent=`R$ ${fin.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiAReceber").textContent=`R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiTotalMes").textContent=`R$ ${total.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
 }
-
-
 function openDayModal(date,items){
   const c=$("#dayContent");
   c.innerHTML=`<h3>Reservas de ${date.toLocaleDateString("pt-BR")}</h3>`;
   if(!items.length){c.innerHTML+="<p class='hint'>Nenhuma reserva.</p>";$("#dayModal").classList.add("show");return;}
   items.forEach(r=>{
     const aReceber=Math.max(r.valorEstimado-(r.pagamentoAntecipado+r.valorFinalPago),0);
+    const nomeColor=r.status==="crédito"?"style='color:var(--verde);font-weight:700'":"";
+    const btns=r.status==="concluída"||r.status==="concluida"?
+      `<button class='btn btn-blue' onclick='abrirDetalhes("${r.id}")'>Abrir</button>`:
+      `<button class='btn btn-green' onclick='abrirFinalizar("${r.id}")'>Finalizar</button>
+       <button class='btn btn-yellow' onclick='marcarCredito("${r.id}")'>Crédito</button>`;
     c.innerHTML+=`
     <div class='res-item'>
-      <b>${r.nome}</b> <small>(${r.mesa||'-'})</small>
+      <b ${nomeColor}>${r.nome}</b> <small>(${r.mesa||'-'})</small>
       <div class='hint'>📞 ${r.telefone||'-'} • 📧 ${r.email||'-'}</div>
       <div class='hint'>👥 ${r.pessoas} pessoas • 🍽️ ${r.cardapio||'-'}</div>
       <div class='hint'>📅 ${new Date(r.datahora).toLocaleString('pt-BR')}</div>
@@ -260,7 +178,7 @@ function openDayModal(date,items){
       <div class='hint'>🪙 A Receber: R$ ${aReceber.toFixed(2)}</div>
       <div class='hint'>📝 ${r.observacoes||'-'}</div>
       <div class='row' style='margin-top:8px;justify-content:flex-end'>
-        <button class='btn btn-green' onclick='abrirFinalizar("${r.id}")'>Finalizar</button>
+        ${btns}
         <button class='btn btn-del' onclick='excluirReserva("${r.id}")'>Excluir</button>
       </div>
     </div>`;
@@ -268,36 +186,31 @@ function openDayModal(date,items){
   $("#dayModal").classList.add("show");
 }
 $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
-
+function abrirDetalhes(id){toast("📖 Reserva já finalizada.");}
 function abrirFinalizar(id){
   const r=state.reservas.find(x=>x.id===id);
   const val=prompt("Informe o valor final pago:");
   if(!val)return;
   const v=parseFloat(val.replace(',','.'))||0;
-  const aReceber=Math.max(r.valorEstimado-(r.pagamentoAntecipado+r.valorFinalPago),0);
-  const dif=v-aReceber;
-  const novoFinal=r.valorFinalPago+v;
-  const novoEstimado=r.valorEstimado+(dif>0?dif:0);
-  fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"concluir",id:r.id,valorFinalPago:novoFinal,valorEstimado:novoEstimado,status:"Concluída"})})
+  $("#overlay").style.display="flex";
+  fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"concluir",id:r.id,valorFinalPago:v,status:"Concluída"})})
     .then(()=>{toast("✅ Reserva finalizada!");$("#dayModal").classList.remove("show");loadMonth(state.ano,state.mes);});
+}
+async function marcarCredito(id){
+  $("#overlay").style.display="flex";
+  await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"status",id,status:"Crédito"})});
+  toast("💚 Reserva marcada como crédito!");$("#dayModal").classList.remove("show");loadMonth(state.ano,state.mes);
 }
 async function excluirReserva(id){
   if(!confirm("Excluir esta reserva?"))return;
+  $("#overlay").style.display="flex";
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"excluir",id})});
   toast("🗑️ Reserva excluída!");$("#dayModal").classList.remove("show");loadMonth(state.ano,state.mes);
-}
-$("#newBtn").onclick=()=>$("#newModal").classList.add("show");
-$("#cancelNew").onclick=()=>$("#newModal").classList.remove("show");
-$("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);fd.append("acao","cadastrar");
-  await fetch(endpoint,{method:"POST",body:fd});
-  toast("✅ Reserva salva!");$("#newModal").classList.remove("show");e.target.reset();loadMonth(state.ano,state.mes);
 }
 $("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
 $("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
 $("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
-loadMonth(state.ano,state.mes);
+window.onload=()=>loadMonth(state.ano,state.mes);
 </script>
 </body>
 </html>
