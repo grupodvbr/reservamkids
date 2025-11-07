@@ -1700,7 +1700,7 @@ document.addEventListener('click', async (e) => {
     const texto = reserva.observacoes || 'Sem observações registradas.';
     obsPreview.innerHTML = `
       <h3>${reserva.nome || 'Cliente'}</h3>
-      <p><b>Data:</b> ${new Date(reserva.datahora).toLocaleString('pt-BR')}</p>
+     <p><b>Data:</b> ${new Date(`${reserva.data || reserva.Data}T${reserva.horaInicio || reserva.HoraInicio || '00:00'}`).toLocaleString('pt-BR')}</p>
       <p><b>Local:</b> ${reserva.mesa || '—'}</p>
       <p><b>Pessoas:</b> ${reserva.pessoas || '—'}</p>
       <p><b>Cardápio:</b> ${reserva.cardapio || '—'}</p>
@@ -1738,7 +1738,7 @@ function gerarPDFReserva(r) {
     `Nome: ${r.nome || ''}`,
     `E-mail: ${r.email || ''}`,
     `Telefone: ${r.telefone || ''}`,
-    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
+   `Data e Hora: ${new Date(`${r.data || r.Data}T${r.horaInicio || r.HoraInicio || '00:00'}`).toLocaleString('pt-BR')}`,
     `Local: ${r.mesa || ''}`,
     `Pessoas: ${r.pessoas || ''}`,
     `Cardápio: ${r.cardapio || ''}`,
