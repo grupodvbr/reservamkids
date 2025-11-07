@@ -945,13 +945,7 @@ function sumPagamentos(r){
 function updateSummary() {
   const { mes, ano } = state;
 
-  if (!state.reservas || !state.reservas.length) {
-    console.warn("⚠️ Nenhuma reserva carregada para resumo.");
-    return;
-  }
-
-  // Mostra estrutura da primeira reserva para debug
-  console.log("🧾 Exemplo de reserva:", state.reservas[0]);
+  if (!state.reservas?.length) return;
 
   const inMonth = state.reservas.filter(r => {
     if (!r.datahora) return false;
@@ -961,7 +955,7 @@ function updateSummary() {
 
   const toNum = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
-  // Função inteligente que aceita nomes em diferentes formatos
+  // pega os valores corretos mesmo que venham com letra maiúscula
   const getVal = (r, keys) => {
     for (const k of keys) {
       if (r[k] !== undefined && r[k] !== '') return toNum(r[k]);
@@ -969,19 +963,30 @@ function updateSummary() {
     return 0;
   };
 
-  const antecipado = inMonth.reduce((acc, r) => acc + getVal(r, ['pagamentoAntecipado', 'PagamentoAntecipado', 'antecipado']), 0);
-  const finalPago  = inMonth.reduce((acc, r) => acc + getVal(r, ['valorFinalPago', 'ValorFinalPago', 'pago']), 0);
-  const estimado   = inMonth.reduce((acc, r) => acc + getVal(r, ['valorEstimado', 'ValorEstimado', 'estimado']), 0);
+  // compatibilidade total com nomes da planilha
+  const antecipado = inMonth.reduce(
+    (acc, r) => acc + getVal(r, ['PagamentoAntecipado', 'pagamentoAntecipado']),
+    0
+  );
+  const finalPago = inMonth.reduce(
+    (acc, r) => acc + getVal(r, ['ValorFinalPago', 'valorFinalPago']),
+    0
+  );
+  const estimado = inMonth.reduce(
+    (acc, r) => acc + getVal(r, ['ValorEstimado', 'valorEstimado']),
+    0
+  );
 
   const aReceber = Math.max(estimado - (antecipado + finalPago), 0);
 
-  console.log("💰 Resumo calculado:", { antecipado, finalPago, estimado, aReceber });
-
   document.querySelector('#kpiAntecipado').textContent = formatBRL(antecipado);
-  document.querySelector('#kpiFinalPago').textContent  = formatBRL(finalPago);
-  document.querySelector('#kpiAReceber').textContent   = formatBRL(aReceber);
-  document.querySelector('#kpiTotalMes').textContent   = formatBRL(antecipado + finalPago);
+  document.querySelector('#kpiFinalPago').textContent = formatBRL(finalPago);
+  document.querySelector('#kpiAReceber').textContent = formatBRL(aReceber);
+  document.querySelector('#kpiTotalMes').textContent = formatBRL(antecipado + finalPago);
+
+  console.log('✅ Resumo atualizado:', { antecipado, finalPago, estimado, aReceber });
 }
+
 
 
 
