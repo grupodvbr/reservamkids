@@ -202,23 +202,46 @@ function buildCalendar(){
 }
 function updateSummary() {
   const mes = state.mes, ano = state.ano;
+
+  // 🔹 Pega só as reservas do mês atual
   const mesRes = state.reservas.filter(r => {
     const d = new Date(r.datahora);
     return d.getMonth() === mes && d.getFullYear() === ano;
   });
 
-  const antecipado = mesRes.reduce((a,b) => a + (b.pagamentoAntecipado || 0), 0);
-  const finalPago  = mesRes.reduce((a,b) => a + (b.valorFinalPago || 0), 0);
-  const totalMes   = mesRes.reduce((a,b) => a + (b.valorEstimado || 0), 0);
+  // 🔹 Valores
+  let antecipado = 0;
+  let finalPago = 0;
+  let totalMes = 0;
 
-  // 🔹 Novo cálculo de "a receber"
+  mesRes.forEach(r => {
+    const valorAnt = r.pagamentoAntecipado || 0;
+    const valorFin = r.valorFinalPago || 0;
+    const valorEst = r.valorEstimado || 0;
+    const status = (r.status || '').toLowerCase();
+
+    antecipado += valorAnt;
+    finalPago  += valorFin;
+
+    // ✅ Se a reserva está concluída, considera o valor pago;
+    // caso contrário, considera o valor estimado.
+    if (status === 'concluída' || status === 'concluida') {
+      totalMes += valorFin > 0 ? valorFin : valorEst;
+    } else {
+      totalMes += valorEst;
+    }
+  });
+
+  // 🔹 A Receber = Total real - (Antecipado + Pago)
   const aReceber = Math.max(totalMes - (antecipado + finalPago), 0);
 
-  $("#kpiAntecipado").textContent = `R$ ${antecipado.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-  $("#kpiFinalPago").textContent  = `R$ ${finalPago.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-  $("#kpiAReceber").textContent   = `R$ ${aReceber.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-  $("#kpiTotalMes").textContent   = `R$ ${totalMes.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
+  // 🔹 Atualiza os cards
+  $("#kpiAntecipado").textContent = `R$ ${antecipado.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiFinalPago").textContent  = `R$ ${finalPago.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiAReceber").textContent   = `R$ ${aReceber.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiTotalMes").textContent   = `R$ ${totalMes.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
 }
+
 
 function openDayModal(date,items){
   const c=$("#dayContent");
