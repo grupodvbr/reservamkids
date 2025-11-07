@@ -993,21 +993,26 @@ function renderResItem(r) {
   const hora = new Date(r.datahora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const status = r.status || 'Pendente';
 
-  // Verifica se há URL de arquivo salvo (coluna ArquivoURL)
   const hasFile = r.arquivoURL || r.ArquivoURL || r.arquivourl || '';
   const fileLink = hasFile
     ? `<a href="${hasFile}" target="_blank" class="btn btn-ghost" style="width:auto; text-decoration:none">📎 Ver Anexo</a>`
     : '';
 
-  // Pagamentos extras (se houver colunas PagamentoExtra...)
+  // 🔧 valores padronizados
+  const estimado  = parseBRL(r.valorEstimado || r.ValorEstimado || 0);
+  const antecipado = parseBRL(r.pagamentoAntecipado || r.PagamentoAntecipado || 0);
+  const finalPago = parseBRL(r.valorFinalPago || r.ValorFinalPago || 0);
+  const totalPago = antecipado + finalPago;
+
+  // 🔧 Pagamentos extras (se houver colunas PagamentoExtra...)
   const pagamentoKeys = Object.keys(r).filter(
-    k => /pagamento/i.test(k) && !['pagamentoAntecipado', 'valorFinalPago', 'valorEstimado'].includes(k)
+    k => /^pagamento/i.test(k) && !/antecipado|final/i.test(k)
   );
   const pagamentos = pagamentoKeys
     .map((k, i) => `💵 Pagamento ${i + 1}: ${formatBRL(parseBRL(r[k]))}`)
     .join('<br>');
 
-  // Renderiza o item completo
+  // 💬 Renderização do item
   return `
     <div class="res-item" data-id="${r.id}">
       <div class="top">
@@ -1018,27 +1023,28 @@ function renderResItem(r) {
         <div class="row" style="margin-left:auto; flex-wrap:wrap; justify-content:flex-end">
           <span class="chip">${status}</span>
           ${fileLink}
-          ${
-            r._semIdReal
-              ? `<button class="btn btn-ghost" style="width:auto" disabled title="Sem ID da planilha">Editar</button>`
-              : `<button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>`
-          }
+          <button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>
           <button class="btn btn-danger btn-excluir" data-id="${r.id}" style="width:auto">Excluir</button>
           <button class="btn btn-primary btn-concluir" data-id="${r.id}" style="width:auto">Concluir</button>
         </div>
       </div>
+
       <div class="meta"><b>Email:</b> ${r.email || '—'} • <b>Tel:</b> ${r.telefone || '—'}</div>
       <div class="meta"><b>Cardápio:</b> ${r.cardapio || '—'} • <b>Banco:</b> ${r.banco || '—'}</div>
       <div class="meta"><b>Obs:</b> ${r.observacoes || '—'}</div>
+
       <div class="meta">
-        Estimado: ${formatBRL(parseBRL(r.valorEstimado || 0))} •
-        Adiantamento: ${formatBRL(parseBRL(r.pagamentoAntecipado || 0) + sumPagamentos(r))} •
-        Final pago: ${formatBRL(parseBRL(r.valorFinalPago || 0))}
+        Estimado: ${formatBRL(estimado)} •
+        Adiantamento: ${formatBRL(antecipado)} •
+        Final pago: ${formatBRL(finalPago)} •
+        <b>Total pago:</b> ${formatBRL(totalPago)}
       </div>
+
       ${pagamentos ? `<div class="meta">${pagamentos}</div>` : ''}
     </div>
   `;
 }
+
 
 
     /* ==============================
