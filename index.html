@@ -553,6 +553,7 @@ body.modal-open {
       <input type="hidden" name="acao" value="cadastrar" />
       <input type="hidden" name="status" value="Pendente" />
       <input type="hidden" name="id" id="reservaId" value="" />
+       <input type="hidden" id="datahora" name="datahora" />
 
       <div class="section">
         <h3>👤 Dados do Cliente</h3>
@@ -1199,7 +1200,7 @@ function renderResItem(r) {
     const clearFile = $('#clearFile');
     const inputData = $('#datahora');
 
-    inputData.min = nowLocalMin();
+    document.getElementById('data').min = new Date().toISOString().split('T')[0];
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
     ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
 
@@ -1472,7 +1473,12 @@ state.reservas = data.map((r,i)=> {
       buildCalendar(); updateSummary();
     }
 
-    function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
+    async function refreshAll() {
+  await loadMonth(state.ano, state.mes);
+  buildCalendar();
+  updateSummary();
+}
+
 // ... funções existentes de editar, concluir, excluir, etc ...
 
 /* ========== MODAL DE EDIÇÃO: SALVAR / ABRIR / CANCELAR ========== */
