@@ -916,27 +916,38 @@ textarea {
     /* ==============================
        Resumo mensal
     ============================== */
-    function sumExtrasFromRecord(r){
-      const keys = Object.keys(r||{}).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
-      return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
-    }
-    function updateSummary(){
-      const {mes, ano} = state;
-      const inMonth = state.reservas.filter(r=>{ const d=new Date(r.datahora); return d.getMonth()===mes && d.getFullYear()===ano; });
-      const sum = (arr,fn)=> arr.reduce((a,b)=>a+fn(b),0);
-      const adiantado = sum(inMonth, r=> parseBRL(r.pagamentoAntecipado||0) + sumExtrasFromRecord(r));
-      const finalPago = sum(inMonth, r=> parseBRL(r.valorFinalPago||0));
-      const aReceber = sum(inMonth.filter(r=> (r.status||'Pendente')!=='Concluída'), r=> {
-        const estimado = parseBRL(r.valorEstimado||0);
-        const ant = parseBRL(r.pagamentoAntecipado||0) + sumExtrasFromRecord(r);
-        const rest = Math.max(estimado - ant, 0);
-        return rest;
-      });
-      $('#kpiAntecipado').textContent = formatBRL(adiantado);
-      $('#kpiFinalPago').textContent = formatBRL(finalPago);
-      $('#kpiAReceber').textContent = formatBRL(aReceber);
-      $('#kpiTotalMes').textContent = formatBRL(adiantado + finalPago);
-    }
+function sumExtrasFromRecord(r){
+  const keys = Object.keys(r||{}).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
+  return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
+}
+
+function updateSummary(){
+  const {mes, ano} = state;
+  const inMonth = state.reservas.filter(r=>{
+    const d = new Date(r.datahora);
+    return d.getMonth()===mes && d.getFullYear()===ano;
+  });
+
+  const sum = (arr,fn)=> arr.reduce((a,b)=>a+fn(b),0);
+
+  // Soma tudo corretamente, incluindo CRÉDITO
+  const adiantado = sum(inMonth, r=> parseBRL(r.pagamentoAntecipado) + sumExtrasFromRecord(r));
+  const finalPago = sum(inMonth, r=> parseBRL(r.valorFinalPago));
+
+  // Considera “A Receber” somente o que ainda não foi concluído
+  const aReceber = sum(inMonth.filter(r=> !['Concluída','Cancelada'].includes(r.status)),
+    r=>{
+      const estimado = parseBRL(r.valorEstimado);
+      const pago = parseBRL(r.pagamentoAntecipado) + sumExtrasFromRecord(r) + parseBRL(r.valorFinalPago);
+      return Math.max(estimado - pago, 0);
+    });
+
+  $('#kpiAntecipado').textContent = formatBRL(adiantado);
+  $('#kpiFinalPago').textContent = formatBRL(finalPago);
+  $('#kpiAReceber').textContent = formatBRL(aReceber);
+  $('#kpiTotalMes').textContent = formatBRL(adiantado + finalPago);
+}
+
 
     /* ==============================
        Modal do dia
