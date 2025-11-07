@@ -1614,16 +1614,29 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
   }
 });
 
+/* ==============================
+   Atualiza tudo (Calendário + Resumo)
+   ============================== */
+async function refreshAll() {
+  try {
+    // Mostra spinner opcional
+    console.log(`🔄 Atualizando mês ${state.mes + 1}/${state.ano}...`);
+    await loadMonth(state.ano, state.mes);
+    buildCalendar();
+    updateSummary();
+    console.log("✅ Calendário renderizado com sucesso!");
+  } catch (e) {
+    console.error("Erro ao atualizar:", e);
+    toast("⚠️ Falha ao atualizar o calendário");
+  }
+}
 
 
+window.addEventListener('DOMContentLoaded', async ()=>{
+  $('#datahora').min = nowLocalMin();
+  await refreshAll(); // agora a função existe e aguarda o carregamento
+});
 
-   
-
-    // Inicialização
-    window.addEventListener('DOMContentLoaded', ()=>{
-      $('#datahora').min = nowLocalMin();
-      refreshAll();
-    });
 
 
 // ========== VISUALIZAR / BAIXAR OBSERVAÇÃO ==========
