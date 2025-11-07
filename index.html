@@ -999,7 +999,11 @@ body.modal-open {
         cell.className = 'cal-day' + (inMonth? '':' out');
         cell.dataset.date = ymd(d);
 
-        const items = state.reservas.filter(r=> r.datahora && ymd(new Date(r.datahora))===ymd(d));
+        const items = state.reservas.filter(r=>{
+  const dh = r.datahora || r.DataHora || '';
+  return dh && ymd(new Date(dh)) === ymd(d);
+});
+
 
         // Agrupar por setor e colorir VIP vs OUTROS
         const norm = s => (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
@@ -1445,48 +1449,47 @@ async function onClickExcluir(e){
     $('#refreshBtn').addEventListener('click', ()=> refreshAll());
 
     async function loadMonth(ano, mes){
-      try{
-        const data = await api.listar(ano, mes);
-state.reservas = data.map((r,i)=> {
-  const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
+  try{
+    const data = await api.listar(ano, mes);
+    state.reservas = data.map((r,i)=> {
+      const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
 
-  // ✅ Monta data/hora a partir de Data + HoraInicio
-  const dataCampo = r.data || r.Data || '';
-  const horaCampo = r.horaInicio || r.HoraInicio || '';
-  const dataHoraComposta = dataCampo ? `${dataCampo}T${horaCampo || '00:00'}` : '';
+      // ✅ Monta a data/hora a partir das colunas separadas
+      const dataCampo = r.data || r.Data || '';
+      const horaIni = r.horaInicio || r.HoraInicio || '';
+      const horaFim = r.horaFim || r.HoraFim || '';
+      const dataHora = dataCampo ? `${dataCampo}T${horaIni || '00:00'}` : '';
+      const dataHoraFim = dataCampo ? `${dataCampo}T${horaFim || '00:00'}` : '';
 
-  return {
-    id: idReal || `ROW-${i+1}`,
-    _semIdReal: !idReal,
-    nome: r.nome||r.Nome||'',
-    email:r.email||r.Email||'',
-    telefone: r.telefone || r.Telefone || r.Fone || '',
-    pessoas:r.pessoas||r.Pessoas||'',
-    mesa:r.mesa||r.Mesa||r.Local||'',
-    cardapio:r.cardapio||r.Cardapio||'',
-    observacoes: r.observacoes || r.Observacoes || r.Obs || '',
-    data: dataCampo,
-    horaInicio: horaCampo,
-    horaFim: r.horaFim || r.HoraFim || '',
-    datahora: dataHoraComposta, // ✅ usado para o calendário
-    valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
-    pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0')),
-    valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.FinalPago ?? '0')),
-    banco: r.banco || r.Banco || '',
-    status: r.status || r.Status || 'Pendente',
-    ...r
-  };
-});
+      return {
+        id: idReal || `ROW-${i+1}`,
+        _semIdReal: !idReal,
+        nome: r.nome || r.Nome || '',
+        email: r.email || r.Email || '',
+        telefone: r.telefone || r.Telefone || r.Fone || '',
+        pessoas: r.pessoas || r.Pessoas || '',
+        mesa: r.mesa || r.Mesa || r.Local || '',
+        cardapio: r.cardapio || r.Cardapio || '',
+        observacoes: r.observacoes || r.Observacoes || r.Obs || '',
+        data: dataCampo,
+        horaInicio: horaIni,
+        horaFim: horaFim,
+        datahora: dataHora,       // usado no calendário
+        datahoraFim: dataHoraFim, // usado se quiser ampliar no futuro
+        valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
+        pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.PagamentoAntecipado ?? '0')),
+        valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.ValorFinalPago ?? '0')),
+        banco: r.banco || r.Banco || '',
+        status: r.status || r.Status || 'Pendente',
+        ...r
+      };
+    });
 
-      }catch(e){
-        state.reservas = [];
-        toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
-      }
-      buildCalendar(); updateSummary();
-    }
+  }catch(e){
+    state.reservas = [];
+    toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
+  }
 
-    async function refreshAll() {
-  await loadMonth(state.ano, state.mes);
   buildCalendar();
   updateSummary();
 }
