@@ -677,91 +677,94 @@ textarea {
     </div>
   </div>
 
-  <!-- Modal de Edição (opcional — mantido caso queira usar depois) -->
-  <div class="modal" id="editModal" aria-hidden="true">
-    <div class="sheet">
-      <h3 style="margin-bottom:0">✏️ Editar reserva / adicionar pagamentos & anexos</h3>
-      <div style="padding:0 16px 16px">
-        <input type="hidden" id="editId" />
-        <div class="section">
-          <h3>👤 Cliente</h3>
-          <div class="inline-grid">
-            <div><label>Nome</label><input id="e_nome" /></div>
-            <div><label>E-mail</label><input id="e_email" type="email" /></div>
-            <div><label>Telefone</label><input id="e_telefone" /></div>
-            <div><label>Pessoas</label><input id="e_pessoas" type="number" min="1" /></div>
+  <!-- Modal de Edição -->
+<div class="modal" id="editModal" aria-hidden="true">
+  <div class="sheet">
+    <h3 style="margin-bottom:0; color:#ff4fa1">✏️ Editar reserva / pagamentos / status</h3>
+    <div style="padding:0 16px 16px">
+      <input type="hidden" id="editId" />
+
+      <div class="section">
+        <h3>👤 Cliente</h3>
+        <div class="inline-grid">
+          <div><label>Nome</label><input id="e_nome" /></div>
+          <div><label>E-mail</label><input id="e_email" type="email" /></div>
+          <div><label>Telefone</label><input id="e_telefone" /></div>
+          <div><label>Pessoas</label><input id="e_pessoas" type="number" min="1" /></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>🪑 Reserva</h3>
+        <div class="inline-grid">
+          <div>
+            <label>Local</label>
+            <select id="e_mesa">
+              <option value="">Selecione</option>
+              <option>SALA VIP</option>
+              <option>SALA VIP 2</option>
+              <option>SACADA</option>
+              <option>SALÃO CENTRAL</option>
+            </select>
+          </div>
+          <div>
+            <label>Cardápio</label>
+            <select id="e_cardapio">
+              <option value="">Selecione</option>
+              <option>Buffet Ouro</option>
+              <option>Buffet Diamante</option>
+              <option>Rodízio Pizza</option>
+              <option>À la carte</option>
+              <option>Outro</option>
+            </select>
           </div>
         </div>
-        <div class="section">
-          <h3>🪑 Reserva</h3>
-          <div class="inline-grid">
-            <div>
-              <label>Local</label>
-              <select id="e_mesa">
-                <option value="">Selecione</option>
-                <option>SALA VIP</option>
-                <option>SALA VIP 2</option>
-                <option>SACADA</option>
-                <option>SALÃO CENTRAL</option>
-              </select>
-            </div>
-            <div>
-              <label>Cardápio</label>
-              <select id="e_cardapio">
-                <option value="">Selecione</option>
-                <option>Buffet Básico</option>
-                <option>Buffet Premium</option>
-                <option>Rodízio</option>
-                <option>À la carte</option>
-                <option>Outro</option>
-              </select>
-            </div>
+
+        <label>Data e Hora</label>
+        <input id="e_datahora" type="datetime-local" />
+
+        <label style="margin-top:10px; display:block">Status da Reserva</label>
+        <select id="e_status" style="border-color:#f5ccff">
+          <option value="Pendente">Pendente</option>
+          <option value="Concluída">Concluída</option>
+          <option value="Cancelada">Cancelada</option>
+          <option value="Crédito">CRÉDITO</option>
+        </select>
+        <div class="hint">Use “CRÉDITO” se o cliente possuir crédito de consumo.</div>
+      </div>
+
+      <div class="section">
+        <h3>💳 Pagamentos</h3>
+        <div class="inline-3">
+          <div><label>Estimado (R$)</label><input id="e_valorEstimado" inputmode="decimal" placeholder="0,00" /></div>
+          <div><label>Adiantado (R$)</label><input id="e_pagamentoAntecipado" inputmode="decimal" placeholder="0,00" /></div>
+          <div>
+            <label>Banco</label>
+            <select id="e_banco">
+              <option value="">Selecione</option>
+              <option>SICREDI</option>
+              <option>ITAÚ</option>
+              <option>CRÉDITO POS</option>
+              <option>DÉBITO POS</option>
+            </select>
           </div>
-          <label>Data e Hora</label>
-          <input id="e_datahora" type="datetime-local" />
         </div>
-        <div class="section">
-          <h3>💳 Pagamentos</h3>
-          <div class="inline-3">
-            <div><label>Estimado (R$)</label><input id="e_valorEstimado" inputmode="decimal" placeholder="0,00" /></div>
-            <div><label>Adiantado (base) (R$)</label><input id="e_pagamentoAntecipado" inputmode="decimal" placeholder="0,00" /></div>
-            <div>
-              <label>Banco do adiantamento</label>
-              <select id="e_banco">
-                <option value="">Selecione</option>
-                <option>SICREDI</option>
-                <option>ITAÚ</option>
-                <option>CRÉDITO POS</option>
-                <option>DÉBITO POS</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:10px" class="hint">Use a lista abaixo para adicionar pagamentos extras.</div>
-          <div id="extrasList" class="list-bordered" aria-live="polite"></div>
-          <div class="toolbar" style="justify-content:flex-end; margin-top:8px">
-            <button id="addExtraBtn" type="button" class="btn btn-ghost" style="width:auto">+ Adicionar pagamento extra</button>
-          </div>
-          <div class="chip" id="sumPreview" style="margin-top:8px">Total adiantado (base + extras): <b>R$ 0,00</b></div>
-        </div>
-        <div class="section">
-          <h3>📎 Anexos adicionais</h3>
-          <div id="anexosList" class="list-bordered"></div>
-          <div class="toolbar" style="justify-content:flex-end; margin-top:8px">
-            <button id="addAnexoBtn" type="button" class="btn btn-ghost" style="width:auto">+ Adicionar anexo</button>
-          </div>
-          <div class="hint">Tipos aceitos: PDF, JPG, PNG. Máx 5 MB por arquivo.</div>
-        </div>
-        <div class="section">
-          <h3>📝 Observações</h3>
-          <textarea id="e_observacoes" rows="3" placeholder="Observações gerais..."></textarea>
-        </div>
-        <div class="toolbar" style="justify-content:flex-end">
-          <button type="button" id="cancelEditModal" class="btn btn-ghost" style="width:auto">Cancelar</button>
-          <button type="button" id="saveEditBtn" class="btn btn-primary" style="width:auto">Salvar alterações</button>
-        </div>
+        <div class="hint" style="margin-top:10px">Caso o status seja “CRÉDITO”, o valor pago será tratado como crédito disponível.</div>
+      </div>
+
+      <div class="section">
+        <h3>📝 Observações</h3>
+        <textarea id="e_observacoes" rows="3" placeholder="Observações gerais..."></textarea>
+      </div>
+
+      <div class="toolbar" style="justify-content:flex-end">
+        <button type="button" id="cancelEditModal" class="btn btn-ghost" style="width:auto">Cancelar</button>
+        <button type="button" id="saveEditBtn" class="btn btn-primary" style="width:auto">Salvar alterações</button>
       </div>
     </div>
   </div>
+</div>
+
 
   <div id="toast" class="toast"></div>
 
@@ -1148,25 +1151,26 @@ function renderResItem(r) {
       $('#banco').required = has;
       $('#bancoReq').style.display = has ? '' : 'none';
 
-      toast('✏️ Editando reserva — altere no formulário e clique em "Salvar Reserva".');
-      // Fecha o modal do dia, se estiver aberto
-      $('#dayModal').classList.remove('show');
-    }
+openEditModal(r);
+$('#dayModal').classList.remove('show');
+}
 
-    async function onClickExcluir(e){
-      const id = e.currentTarget.dataset.id;
-      const r = state.reservas.find(x=>String(x.id)===String(id));
-      if(!r) return;
-      const ok = confirm(`Excluir a reserva de ${r.nome||'—'} em ${new Date(r.datahora).toLocaleString('pt-BR')}? Esta ação não pode ser desfeita.`);
-      if(!ok) return;
-      const resp = await api.excluir(id);
-      if(resp.ok){
-        toast('🗑️ Reserva excluída');
-        await loadMonth(state.ano, state.mes);
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
-    }
+// Função de exclusão (corrigida)
+async function onClickExcluir(e){
+  const id = e.currentTarget.dataset.id;
+  const r = state.reservas.find(x=>String(x.id)===String(id));
+  if(!r) return;
+  const ok = confirm(`Excluir a reserva de ${r.nome||'—'} em ${new Date(r.datahora).toLocaleString('pt-BR')}? Esta ação não pode ser desfeita.`);
+  if(!ok) return;
+  const resp = await api.excluir(id);
+  if(resp.ok){
+    toast('🗑️ Reserva excluída');
+    await loadMonth(state.ano, state.mes);
+  }else{
+    toast('⚠️ ' + resp.message);
+  }
+}
+
 
     // Concluir fluxo com modal
     const finishModal = $('#finishModal');
@@ -1250,6 +1254,72 @@ state.reservas = data.map((r,i)=> {
     }
 
     function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
+// ... funções existentes de editar, concluir, excluir, etc ...
+
+/* ========== MODAL DE EDIÇÃO: SALVAR / ABRIR / CANCELAR ========== */
+const editModal = $('#editModal');
+const saveEditBtn = $('#saveEditBtn');
+const cancelEditModal = $('#cancelEditModal');
+
+function openEditModal(reserva) {
+  $('#editId').value = reserva.id;
+  $('#e_nome').value = reserva.nome || '';
+  $('#e_email').value = reserva.email || '';
+  $('#e_telefone').value = reserva.telefone || '';
+  $('#e_pessoas').value = reserva.pessoas || '';
+  $('#e_mesa').value = reserva.mesa || '';
+  $('#e_cardapio').value = reserva.cardapio || '';
+  $('#e_observacoes').value = reserva.observacoes || '';
+  $('#e_status').value = reserva.status || 'Pendente';
+  $('#e_valorEstimado').value = (Number(reserva.valorEstimado || 0)).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  $('#e_pagamentoAntecipado').value = (Number(reserva.pagamentoAntecipado || 0)).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  $('#e_banco').value = reserva.banco || '';
+
+  if (reserva.datahora) {
+    const dt = new Date(reserva.datahora);
+    const local = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    $('#e_datahora').value = local;
+  }
+
+  editModal.classList.add('show');
+}
+
+$('#cancelEditModal').addEventListener('click', () => editModal.classList.remove('show'));
+editModal.addEventListener('click', e => { if(e.target === editModal) editModal.classList.remove('show'); });
+
+$('#saveEditBtn').addEventListener('click', async () => {
+  const id = $('#editId').value;
+  if(!id){ toast('Nenhuma reserva selecionada.'); return; }
+
+  const payload = {
+    nome: $('#e_nome').value,
+    email: $('#e_email').value,
+    telefone: $('#e_telefone').value,
+    pessoas: $('#e_pessoas').value,
+    mesa: $('#e_mesa').value,
+    cardapio: $('#e_cardapio').value,
+    observacoes: $('#e_observacoes').value,
+    status: $('#e_status').value,
+    valorEstimado: String(parseBRL($('#e_valorEstimado').value)),
+    pagamentoAntecipado: String(parseBRL($('#e_pagamentoAntecipado').value)),
+    banco: $('#e_banco').value,
+    datahora: $('#e_datahora').value
+  };
+
+  const resp = await api.atualizar(id, payload);
+  if(resp.ok){
+    toast('✅ Alterações salvas com sucesso!');
+    editModal.classList.remove('show');
+    await loadMonth(state.ano, state.mes);
+  } else {
+    toast('⚠️ ' + resp.message);
+  }
+});
+
+
+
+
+   
 
     // Inicialização
     window.addEventListener('DOMContentLoaded', ()=>{
