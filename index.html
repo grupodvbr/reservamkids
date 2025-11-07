@@ -200,18 +200,26 @@ function buildCalendar(){
     grid.appendChild(cell);
   }
 }
-function updateSummary(){
-  const mes=state.mes,ano=state.ano;
-  const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano});
-  const ad=mesRes.reduce((a,b)=>a+(b.pagamentoAntecipado||0),0);
-  const fin=mesRes.reduce((a,b)=>a+(b.valorFinalPago||0),0);
-  const est=mesRes.reduce((a,b)=>a+(b.valorEstimado||0),0);
-  const rec=Math.max(est-(ad+fin),0);
-  $("#kpiAntecipado").textContent=`R$ ${ad.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiFinalPago").textContent=`R$ ${fin.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiAReceber").textContent=`R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiTotalMes").textContent=`R$ ${(ad+fin).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+function updateSummary() {
+  const mes = state.mes, ano = state.ano;
+  const mesRes = state.reservas.filter(r => {
+    const d = new Date(r.datahora);
+    return d.getMonth() === mes && d.getFullYear() === ano;
+  });
+
+  const antecipado = mesRes.reduce((a,b) => a + (b.pagamentoAntecipado || 0), 0);
+  const finalPago  = mesRes.reduce((a,b) => a + (b.valorFinalPago || 0), 0);
+  const totalMes   = mesRes.reduce((a,b) => a + (b.valorEstimado || 0), 0);
+
+  // 🔹 Novo cálculo de "a receber"
+  const aReceber = Math.max(totalMes - (antecipado + finalPago), 0);
+
+  $("#kpiAntecipado").textContent = `R$ ${antecipado.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
+  $("#kpiFinalPago").textContent  = `R$ ${finalPago.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
+  $("#kpiAReceber").textContent   = `R$ ${aReceber.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
+  $("#kpiTotalMes").textContent   = `R$ ${totalMes.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
 }
+
 function openDayModal(date,items){
   const c=$("#dayContent");
   c.innerHTML=`<h3>Reservas de ${date.toLocaleDateString("pt-BR")}</h3>`;
