@@ -950,24 +950,26 @@ function updateSummary(){
     return d.getMonth()===mes && d.getFullYear()===ano;
   });
 
-  const sum = (arr, fn) => arr.reduce((a,b)=>a+fn(b),0);
-  const adiantado = sum(inMonth, r => (r.pagamentoAntecipado||0) + sumPagamentos(r));
-  const finalPago  = sum(inMonth, r => (r.valorFinalPago||0));
+  const toNum = v => Number(String(v||'').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+  const sum = (arr, key) => arr.reduce((acc,r)=> acc + toNum(r[key]), 0);
 
-  const aReceber = sum(
-    inMonth.filter(r=> !['Concluída','Cancelada'].includes(r.status||'')),
-    r => {
-      const estimado = (r.valorEstimado||0);
-      const pago = (r.pagamentoAntecipado||0) + sumPagamentos(r) + (r.valorFinalPago||0);
-      return Math.max(estimado - pago, 0);
-    }
-  );
+  const antecipado = sum(inMonth, 'PagamentoAntecipado');
+  const finalPago  = sum(inMonth, 'ValorFinalPago');
 
-  $('#kpiAntecipado').textContent = formatBRL(adiantado);
+  const aReceber = inMonth.reduce((acc,r)=>{
+    const estimado = toNum(r.ValorEstimado);
+    const ant = toNum(r.PagamentoAntecipado);
+    const pago = toNum(r.ValorFinalPago);
+    const pendente = Math.max(estimado - (ant + pago), 0);
+    return acc + pendente;
+  },0);
+
+  $('#kpiAntecipado').textContent = formatBRL(antecipado);
   $('#kpiFinalPago').textContent  = formatBRL(finalPago);
   $('#kpiAReceber').textContent   = formatBRL(aReceber);
-  $('#kpiTotalMes').textContent   = formatBRL(adiantado + finalPago);
+  $('#kpiTotalMes').textContent   = formatBRL(antecipado + finalPago);
 }
+
 
 
 
