@@ -5,7 +5,7 @@
 <title>🎈 Painel de Reservas • M.Kids</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-:root{
+:root {
   --rosa:#f472b6;--azul:#60a5fa;--verde:#34d399;--amarelo:#facc15;
   --bg:#fff7fb;--card:#fff;--muted:#666;--line:#eee;--radius:14px;
 }
@@ -99,7 +99,7 @@ label{font-weight:600;font-size:.9rem;color:#444;}
   <div class="sheet">
     <h3 id="formTitle">🎈 Nova Reserva</h3>
     <form id="reservaForm">
-      <input type="hidden" name="id" id="reservaId">
+      <input type="hidden" name="id">
       <div class="section"><label>Nome Completo</label><input name="nome" required></div>
       <div class="section"><label>Email</label><input name="email" type="email"></div>
       <div class="section"><label>Telefone</label><input name="telefone" type="tel" required></div>
@@ -134,53 +134,72 @@ const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$("#calDow").innerHTML=do
 const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[],editId:null};
 
 async function loadMonth(a,m){overlay(true);
-  const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
-  const data=await res.json();
-  state.reservas=data.map(r=>({...r,status:(r.status||'Pendente').toLowerCase()}));
+  try{
+    const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
+    const data=await res.json();
+    state.reservas=(Array.isArray(data)?data:[]).map(r=>({...r,status:(r.status||'Pendente').toLowerCase()}));
+  }catch(e){state.reservas=[];}
   buildCalendar();updateSummary();overlay(false);
 }
 
-function buildCalendar(){const{mes,ano}=state;
+function buildCalendar(){
+  const {mes,ano}=state;
   $("#calTitle").textContent=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
-  const grid=$("#calGrid");grid.innerHTML="";const first=new Date(ano,mes,1);const startDay=(first.getDay()+7)%7;
+  const grid=$("#calGrid");grid.innerHTML="";
+  const first=new Date(ano,mes,1);
+  const startDay=(first.getDay()+7)%7;
   const start=new Date(first);start.setDate(1-startDay);
-  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);
-    const cell=document.createElement("div");cell.className="cal-day";
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const cell=document.createElement("div");
+    cell.className="cal-day";
     const items=state.reservas.filter(r=>r.datahora&&ymd(new Date(r.datahora))===ymd(d));
-    const nomes=items.slice(0,5).map(r=>{const nome=r.nome.split(" ")[0];const classe=r.status==="crédito"?"t-cred":"t-norm";return `<span class='tag ${classe}'>${nome}</span>`;}).join("");
+    const nomes=items.slice(0,5).map(r=>{
+      const nome=r.nome?.split(" ")[0]||"?";
+      const classe=r.status==="crédito"?"t-cred":"t-norm";
+      return `<span class='tag ${classe}'>${nome}</span>`;
+    }).join("");
     cell.innerHTML=`<div class='num'>${d.getDate()}</div>${nomes}`;
     cell.onclick=()=>openDayModal(d,items);
     grid.appendChild(cell);
   }
 }
 
-function updateSummary(){const mes=state.mes,ano=state.ano;
+function updateSummary(){
+  const mes=state.mes,ano=state.ano;
   const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano;});
-  let ant=0,fin=0,total=0;mesRes.forEach(r=>{const a=+r.pagamentoAntecipado||0,f=+r.valorFinalPago||0,e=+r.valorEstimado||0,s=r.status;ant+=a;fin+=f;if(s==="concluída"||s==="concluida")total+=f>0?f:e;else total+=e;});
+  let ant=0,fin=0,total=0;
+  mesRes.forEach(r=>{
+    const a=+r.pagamentoAntecipado||0,f=+r.valorFinalPago||0,e=+r.valorEstimado||0,s=r.status;
+    ant+=a;fin+=f;if(s==="concluída"||s==="concluida")total+=f>0?f:e;else total+=e;
+  });
   const rec=Math.max(total-(ant+fin),0);
   $("#kpiAntecipado").textContent=`R$ ${ant.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
   $("#kpiFinalPago").textContent=`R$ ${fin.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
   $("#kpiAReceber").textContent=`R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiTotalMes").textContent=`R$ ${total.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;}
+  $("#kpiTotalMes").textContent=`R$ ${total.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+}
 
-function openDayModal(date,items){const c=$("#dayContent");
+function openDayModal(date,items){
+  const c=$("#dayContent");
   c.innerHTML=`<h3>Reservas de ${date.toLocaleDateString("pt-BR")}</h3>`;
   if(!items.length){c.innerHTML+="<p class='hint'>Nenhuma reserva.</p>";$("#dayModal").classList.add("show");return;}
   items.forEach(r=>{
-    const aReceber=Math.max(r.valorEstimado-(r.pagamentoAntecipado+r.valorFinalPago),0);
-    let btns="";if(r.status!=="concluída"&&r.status!=="concluida")btns+=`<button class='btn btn-green' onclick='finalizar("${r.id}")'>Finalizar</button>`;
+    const aReceber=Math.max((+r.valorEstimado)-((+r.pagamentoAntecipado)+(+r.valorFinalPago)),0);
+    let btns="";
+    if(r.status!=="concluída"&&r.status!=="concluida")btns+=`<button class='btn btn-green' onclick='finalizar("${r.id}")'>Finalizar</button>`;
     if(r.status!=="crédito")btns+=`<button class='btn btn-yellow' onclick='creditar("${r.id}")'>Crédito</button>`;
     c.innerHTML+=`
     <div class='res-item'>
       <button class='edit-btn' onclick='editar("${r.id}")'>✏️</button>
-      <b>${r.nome}</b> <small>(${r.mesa||'-'})</small>
-      <div class='hint'>📞 ${r.telefone||'-'} • 📧 ${r.email||'-'}</div>
-      <div class='hint'>👥 ${r.pessoas} pessoas • 🍽️ ${r.cardapio||'-'}</div>
-      <div class='hint'>📅 ${new Date(r.datahora).toLocaleString('pt-BR')}</div>
+      <b>${r.nome||"Sem nome"}</b> <small>(${r.mesa||"-"})</small>
+      <div class='hint'>📞 ${r.telefone||"-"} • 📧 ${r.email||"-"}</div>
+      <div class='hint'>👥 ${r.pessoas||"?"} pessoas • 🍽️ ${r.cardapio||"-"}</div>
+      <div class='hint'>📅 ${new Date(r.datahora).toLocaleString("pt-BR")}</div>
       <div class='hint'>💰 Antecipado: R$ ${(+r.pagamentoAntecipado).toFixed(2)}</div>
       <div class='hint'>🧾 Final Pago: R$ ${(+r.valorFinalPago).toFixed(2)}</div>
       <div class='hint'>🪙 A Receber: R$ ${aReceber.toFixed(2)}</div>
-      <div class='hint'>📝 ${r.observacoes||'-'}</div>
+      <div class='hint'>📝 ${r.observacoes||"-"}</div>
       <div class='row' style='margin-top:8px;justify-content:flex-end'>${btns}
         <button class='btn btn-del' onclick='excluir("${r.id}")'>Excluir</button>
       </div>
@@ -199,26 +218,26 @@ async function excluir(id){if(!confirm("Excluir?"))return;overlay(true);
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"excluir",id})});
   toast("🗑️ Excluído!");loadMonth(state.ano,state.mes);overlay(false);}
 
-function editar(id){const r=state.reservas.find(x=>x.id===id);
-  if(!r)return;state.editId=id;$("#formTitle").textContent="✏️ Editar Reserva";$("#saveBtn").textContent="Atualizar";
-  Object.keys(r)....r).forEach(k=>{const el=$("#reservaForm [name='"+k+"']");if(el)el.value=r[k];});
+function editar(id){
+  const r=state.reservas.find(x=>x.id===id);
+  if(!r)return;
+  $("#formTitle").textContent="✏️ Editar Reserva";
+  $("#saveBtn").textContent="Atualizar";
+  state.editId=id;
+  for(const k in r){const el=$("#reservaForm [name='"+k+"']");if(el)el.value=r[k];}
   $("#formModal").classList.add("show");
 }
 
 $("#cancelForm").onclick=()=>$("#formModal").classList.remove("show");
 
 $("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();
-  overlay(true);
+  e.preventDefault();overlay(true);
   const fd=new FormData(e.target);
-  fd.append("acao", state.editId ? "editar" : "cadastrar");
+  fd.append("acao",state.editId?"editar":"cadastrar");
   await fetch(endpoint,{method:"POST",body:fd});
-  toast(state.editId ? "✏️ Reserva atualizada!" : "✅ Reserva salva!");
-  $("#formModal").classList.remove("show");
-  e.target.reset();
-  state.editId=null;
-  loadMonth(state.ano,state.mes);
-  overlay(false);
+  toast(state.editId?"✏️ Atualizado!":"✅ Salvo!");
+  $("#formModal").classList.remove("show");e.target.reset();state.editId=null;
+  loadMonth(state.ano,state.mes);overlay(false);
 };
 
 $("#newBtn").onclick=()=>{state.editId=null;$("#formTitle").textContent="🎈 Nova Reserva";$("#saveBtn").textContent="Salvar";$("#reservaForm").reset();$("#formModal").classList.add("show");}
