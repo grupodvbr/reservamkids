@@ -942,27 +942,36 @@ function sumPagamentos(r){
   return keys.reduce((acc, k) => acc + parseBRL(r[k]), 0);
 }
 
-function updateSummary(){
+function updateSummary() {
   const { mes, ano } = state;
-  const inMonth = state.reservas.filter(r=>{
-    if(!r.datahora) return false;
+
+  // Filtra reservas do mês atual
+  const inMonth = state.reservas.filter(r => {
+    if (!r.datahora) return false;
     const d = new Date(r.datahora);
     return d.getMonth() === mes && d.getFullYear() === ano;
   });
 
-  // Todos os valores já estão numéricos (parseBRL no loadMonth)
-  const antecipado = inMonth.reduce((acc, r) => acc + (r.pagamentoAntecipado || 0), 0);
-  const finalPago  = inMonth.reduce((acc, r) => acc + (r.valorFinalPago || 0), 0);
-  const estimado   = inMonth.reduce((acc, r) => acc + (r.valorEstimado || 0), 0);
+  // Garante que todos os valores sejam numéricos
+  const toNum = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
-  // "A receber" = estimado - (antecipado + pago)
+  // Corrige nomes de campos (usa camelCase e fallback para maiúsculo)
+  const get = (r, key) => toNum(r[key] ?? r[key.charAt(0).toUpperCase() + key.slice(1)] ?? 0);
+
+  const antecipado = inMonth.reduce((acc, r) => acc + get(r, 'pagamentoAntecipado'), 0);
+  const finalPago  = inMonth.reduce((acc, r) => acc + get(r, 'valorFinalPago'), 0);
+  const estimado   = inMonth.reduce((acc, r) => acc + get(r, 'valorEstimado'), 0);
+
+  // "A receber" = estimado - (antecipado + finalPago)
   const aReceber = Math.max(estimado - (antecipado + finalPago), 0);
 
-  $('#kpiAntecipado').textContent = formatBRL(antecipado);
-  $('#kpiFinalPago').textContent  = formatBRL(finalPago);
-  $('#kpiAReceber').textContent   = formatBRL(aReceber);
-  $('#kpiTotalMes').textContent   = formatBRL(antecipado + finalPago);
+  // Atualiza os cards
+  document.querySelector('#kpiAntecipado').textContent = formatBRL(antecipado);
+  document.querySelector('#kpiFinalPago').textContent  = formatBRL(finalPago);
+  document.querySelector('#kpiAReceber').textContent   = formatBRL(aReceber);
+  document.querySelector('#kpiTotalMes').textContent   = formatBRL(antecipado + finalPago);
 }
+
 
 
 
