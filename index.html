@@ -18,21 +18,10 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:20px;}
 .card-head{padding:14px 18px;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center;}
 .card-head h2{margin:0;font-size:1rem;color:var(--accent);}
-.section{padding:16px;}
-label{font-weight:600;font-size:.9rem;}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;}
-.btn{border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;}
-.btn-primary{background:var(--brand);color:#fff;}
-.btn-del{background:var(--danger);color:#fff;}
-.btn-status{background:var(--accent);color:#fff;}
-.btn-edit{background:var(--info);color:#fff;}
-.row{display:flex;gap:8px;flex-wrap:wrap;}
-.hint{color:var(--muted);font-size:.85rem;}
-.toast{position:fixed;bottom:18px;right:18px;background:var(--brand);color:#fff;padding:12px 14px;border-radius:12px;display:none;}
-.toast.show{display:block;}
 .cal{padding:16px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.cal-day{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:95px;cursor:pointer;}
+.cal-day{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:95px;text-align:left;cursor:pointer;transition:.12s;}
+.cal-day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.1);}
 .num{font-weight:700;font-size:.95rem;}
 .tag{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:10px;margin-top:4px;}
 .t-pend{background:#fef9c3;color:#92400e;}
@@ -48,6 +37,14 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
 .res-item .name.credito{color:var(--ok);}
 .res-item .name.concluida{color:var(--info);}
 .res-item .name.cancelada{color:var(--danger);}
+.btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+.btn-edit{background:var(--brand);color:#fff;}
+.btn-del{background:var(--danger);color:#fff;}
+.btn-status{background:var(--accent);color:#fff;}
+.row{display:flex;gap:6px;flex-wrap:wrap;}
+.hint{color:var(--muted);font-size:.85rem;}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--brand);color:#fff;padding:12px 14px;border-radius:12px;display:none;}
+.toast.show{display:block;}
 </style>
 </head>
 <body>
@@ -56,48 +53,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
   <div class="title">🎈 Reservas • M.Kids</div>
   <div class="badge">Calendário & Gerenciamento</div>
 </header>
-
-<!-- ===== FORM ===== -->
-<form id="reservaForm" class="card" novalidate>
-  <div class="card-head"><h2>Nova / Editar Reserva</h2></div>
-  <div class="section">
-    <input type="hidden" id="reservaId" name="id">
-    <label>Nome</label>
-    <input id="nome" name="nome" required>
-    <label>Email</label>
-    <input id="email" name="email" type="email" required>
-    <label>Telefone</label>
-    <input id="telefone" name="telefone" required>
-    <label>Pessoas</label>
-    <input id="pessoas" name="pessoas" type="number" min="1" required>
-    <label>Local</label>
-    <select id="mesa" name="mesa" required>
-      <option value="">Selecione</option>
-      <option>Sala de Festa</option>
-      <option>Parquinho</option>
-      <option>Piscina de Bolinhas</option>
-    </select>
-    <label>Cardápio</label>
-    <select id="cardapio" name="cardapio">
-      <option value="">Selecione</option>
-      <option>Buffet Kids</option>
-      <option>Pizza Infantil</option>
-      <option>Mini Lanches</option>
-    </select>
-    <label>Data e Hora</label>
-    <input id="datahora" name="datahora" type="datetime-local" required>
-    <label>Valor Estimado (R$)</label>
-    <input id="valorEstimado" name="valorEstimado" inputmode="decimal">
-    <label>Adiantamento (R$)</label>
-    <input id="pagamentoAntecipado" name="pagamentoAntecipado" inputmode="decimal">
-    <label>Observações</label>
-    <textarea id="observacoes" name="observacoes" rows="3"></textarea>
-  </div>
-  <div class="section row" style="justify-content:flex-end;">
-    <button type="reset" class="btn">Limpar</button>
-    <button type="submit" class="btn btn-primary">Salvar</button>
-  </div>
-</form>
 
 <!-- ===== CALENDÁRIO ===== -->
 <div class="card">
@@ -128,19 +83,23 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
 </div>
 
 <script>
-const endpoint="https://script.google.com/macros/s/AKfycbxf8bB1gfZpal1-bN8v6hNO8gTr6fKxG2MyV_g3Rlhn-mJxF0sYuNHta_yT9zKmkd2Eww/exec";
-const $=s=>document.querySelector(s);
-const toast=msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);};
-const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-$("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:#f472b6'>${d}</div>`).join("");
+const endpoint = "https://script.google.com/macros/s/AKfycbxf8bB1gfZpal1-bN8v6hNO8gTr6fKxG2MyV_g3Rlhn-mJxF0sYuNHta_yT9zKmkd2Eww/exec";
+const $ = s=>document.querySelector(s);
+const toast = msg => {const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);};
+const ymd = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+$("#calDow").innerHTML = dow.map(d=>`<div style='text-align:center;font-weight:700;color:#f472b6'>${d}</div>`).join("");
 const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
 
 async function loadMonth(a,m){
   try{
     const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
     const data=await res.json();
-    state.reservas=data.map(r=>({...r,status:r.status||r.Status||"Pendente",datahora:r.datahora||r.DataHora}));
+    state.reservas=data.map(r=>({
+      ...r,
+      status:r.status||r.Status||"Pendente",
+      datahora:r.datahora||r.DataHora
+    }));
   }catch{state.reservas=[];}
   buildCalendar();
 }
@@ -179,9 +138,10 @@ function openDayModal(date,items){
   list.innerHTML=items.map(r=>{
     const st=r.status.toLowerCase();
     const corClass=st==="crédito"?"credito":st;
+    const corName=corClass==="credito"?"credito":st;
     const creditoTxt=(st==="crédito" && r.pagamentoAntecipado)?`<div class='hint' style='color:var(--ok)'>Crédito: R$ ${r.pagamentoAntecipado}</div>`:"";
     return `<div class='res-item'>
-      <div class='name ${corClass}'>${r.nome||"—"}</div>
+      <div class='name ${corName}'>${r.nome||"—"}</div>
       <div class='hint'>${r.email||""} • ${r.telefone||""}</div>
       <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas • ${r.cardapio||""}</div>
       <div class='hint'>Data/Hora: ${new Date(r.datahora).toLocaleString("pt-BR")}</div>
@@ -198,53 +158,25 @@ function openDayModal(date,items){
 }
 $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
 
-// === AÇÕES ===
+// ===== AÇÕES =====
 async function excluirReserva(id){
   if(!confirm("Excluir esta reserva?"))return;
-  await fetch(`${endpoint}?acao=excluir&id=${id}`);
+  const res=await fetch(`${endpoint}?acao=excluir&id=${id}`);
   toast("🗑️ Reserva excluída!");
   loadMonth(state.ano,state.mes);
 }
 async function mudarStatus(id,statusAtual){
   const novo=prompt("Novo status (Pendente / Crédito / Concluída / Cancelada):",statusAtual);
   if(!novo)return;
-  await fetch(`${endpoint}?acao=status&id=${id}&status=${encodeURIComponent(novo)}`);
+  const res=await fetch(`${endpoint}?acao=status&id=${id}&status=${encodeURIComponent(novo)}`);
   toast("🔄 Status atualizado!");
   loadMonth(state.ano,state.mes);
 }
 function editarReserva(id){
-  const r=state.reservas.find(x=>x.id===id);
-  if(!r)return;
-  $("#reservaId").value=r.id;
-  $("#nome").value=r.nome||"";
-  $("#email").value=r.email||"";
-  $("#telefone").value=r.telefone||"";
-  $("#pessoas").value=r.pessoas||"";
-  $("#mesa").value=r.mesa||"";
-  $("#cardapio").value=r.cardapio||"";
-  $("#datahora").value=r.datahora?new Date(r.datahora).toISOString().slice(0,16):"";
-  $("#valorEstimado").value=r.valorEstimado||"";
-  $("#pagamentoAntecipado").value=r.pagamentoAntecipado||"";
-  $("#observacoes").value=r.observacoes||"";
-  toast("✏️ Editando reserva de "+r.nome);
-  window.scrollTo({top:0,behavior:"smooth"});
-  $("#dayModal").classList.remove("show");
+  alert("✏️ A função de edição abrirá o formulário preenchido (em breve).");
 }
 
-// === FORM SUBMIT ===
-$("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  const obj=Object.fromEntries(fd.entries());
-  const acao=obj.id?"atualizar":"cadastrar";
-  const res=await fetch(`${endpoint}?acao=${acao}`,{method:"POST",body:new URLSearchParams(obj)});
-  toast(obj.id?"✅ Reserva atualizada!":"✅ Reserva cadastrada!");
-  e.target.reset();
-  $("#reservaId").value="";
-  loadMonth(state.ano,state.mes);
-};
-
-// === NAVEGAÇÃO ===
+// ===== NAVEGAÇÃO =====
 $("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
 $("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
 $("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
