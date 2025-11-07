@@ -980,6 +980,47 @@ body.modal-open {
     const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const calTitle = $('#calTitle'), calDow = $('#calDow'), calGrid = $('#calGrid');
+   /* ========== OVERLAY DE CARREGAMENTO COM SPINNER INFANTIL ========== */
+const overlay = document.createElement('div');
+overlay.id = 'calOverlay';
+overlay.style.position = 'absolute';
+overlay.style.inset = 0;
+overlay.style.borderRadius = '20px';
+overlay.style.display = 'none';
+overlay.innerHTML = `
+  <div style="
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.85);
+    backdrop-filter:blur(3px);
+    border-radius:20px;
+    text-align:center;
+    font-weight:700; color:#ff4fa1;
+    font-size:1.1rem;">
+    <div class="spinner-ball" style="
+      width:40px; height:40px;
+      border-radius:50%;
+      border:6px solid #ffb3de;
+      border-top-color:#ffa64b;
+      animation: spin 1s linear infinite;
+      margin-bottom:10px;">
+    </div>
+    <span id="overlayMsg">⏳ Carregando reservas...</span>
+  </div>
+`;
+
+$('#calGrid').parentElement.style.position = 'relative';
+$('#calGrid').parentElement.appendChild(overlay);
+
+function showOverlay(msg="⏳ Carregando reservas...") {
+  $('#overlayMsg').textContent = msg;
+  overlay.style.display = 'flex';
+}
+function hideOverlay() {
+  overlay.style.display = 'none';
+}
+
       /* ========== OVERLAY DE CARREGAMENTO ========== */
 const overlay = document.createElement('div');
 overlay.id = 'calOverlay';
