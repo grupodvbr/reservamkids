@@ -1002,10 +1002,10 @@ body.modal-open {
        const items = state.reservas.filter(r=>{
   const dataCampo = r.data || r.Data || '';
   const horaCampo = r.horaInicio || r.HoraInicio || '';
-  if (!dataCampo) return false;
-  const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
-  return ymd(new Date(dataHora)) === ymd(d);
+  const dataHora = dataCampo ? `${dataCampo}T${horaCampo || '00:00'}` : '';
+  return dataHora && ymd(new Date(dataHora)) === ymd(d);
 });
+
 
 
 
@@ -1072,6 +1072,7 @@ const reservasMes = state.reservas.filter(r => {
   const d = new Date(dataHora);
   return d.getMonth() === mes && d.getFullYear() === ano;
 });
+
 
 
   const parse = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
