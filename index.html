@@ -611,21 +611,8 @@ body.modal-open {
           </div>
         </div>
 
-<label for="dataReserva">Data da Reserva <span style="color:var(--danger)">*</span></label>
-<input type="date" id="dataReserva" name="dataReserva" required />
-
-<div class="inline-grid" style="margin-top:10px;">
-  <div>
-    <label for="horaInicio">Horário de Início <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaInicio" name="horaInicio" required />
-  </div>
-  <div>
-    <label for="horaFim">Horário de Término <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaFim" name="horaFim" required />
-  </div>
-</div>
-<div class="hint">O horário de término deve ser posterior ao de início.</div>
-
+        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+        <input type="datetime-local" id="datahora" name="datahora" required />
         <div class="hint">Não é permitido escolher data passada.</div>
       </div>
 
@@ -891,7 +878,7 @@ body.modal-open {
     /* ==============================
        Config
     ============================== */
-    const endpoint = "https://script.google.com/macros/s/AKfycbyvNaC68SRwxSo6t40aPcrjetwHGe3VbA7HG465nAchau2hNFmbEtmJ3yx-h3Z-t89kQA/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbyxu7-PXfPrbqywc6WihyWxTKVNf1nSFVr56XNnZpTTu0VfMvst27Hrrzit3xENs2lOMw/exec";
 
     /* ==============================
        Helpers
@@ -1120,12 +1107,6 @@ function updateSummary() {
 
 function renderResItem(r) {
   const hora = new Date(r.datahora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-const duracao = r.duracaoHoras || (
-  (r.horaInicio && r.horaFim)
-    ? ((new Date(`1970-01-01T${r.horaFim}`) - new Date(`1970-01-01T${r.horaInicio}`)) / 3600000).toFixed(1)
-    : ''
-);
-
   const status = r.status || 'Pendente';
 
   const hasFile = r.arquivoURL || r.ArquivoURL || r.arquivourl || '';
@@ -1153,11 +1134,7 @@ const duracao = r.duracaoHoras || (
       <div class="top">
         <div>
           <div class="name">${r.nome || '—'}</div>
-          <div class="meta">
-  ${hora} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)
-  ${duracao ? `• ${duracao}h` : ''}
-</div>
-
+          <div class="meta">${hora} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)</div>
         </div>
         <div class="row" style="margin-left:auto; flex-wrap:wrap; justify-content:flex-end">
           <span class="chip">${status}</span>
@@ -1231,30 +1208,12 @@ const duracao = r.duracaoHoras || (
     });
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
-   function validateExtra(){
-  const nome = document.getElementById('nome').value.trim();
-  const data = document.getElementById('dataReserva').value;
-  const inicio = document.getElementById('horaInicio').value;
-  const fim = document.getElementById('horaFim').value;
-
-  if(!nome){
-    toast('Informe o nome do cliente.');
-    document.getElementById('nome').focus();
-    return false;
-  }
-
-  // 🕐 Validação do horário
-  const hIni = document.getElementById('horaInicio').value;
-  const hFim = document.getElementById('horaFim').value;
-  if (hIni && hFim && hFim <= hIni) {
-    toast('O horário de término deve ser posterior ao de início.');
-    document.getElementById('horaFim').focus();
-    return false;
-  }
-
-  return true;
-}
-
+    function validateExtra(){
+      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
+      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
+      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
+      return true;
+    }
 
     form.addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -1306,30 +1265,12 @@ const duracao = r.duracaoHoras || (
 
 
     function collectPayload(){
-  const fd = new FormData(form);
-  const obj = Object.fromEntries(fd.entries());
-
-  // Junta data + hora para enviar como ISO
-  const data = obj.dataReserva;
-  const inicio = obj.horaInicio;
-  const fim = obj.horaFim;
-
-  if (data && inicio && fim) {
-    obj.datahora = `${data}T${inicio}`; // mantém compatibilidade com planilha
-    obj.horaInicio = inicio;
-    obj.horaFim = fim;
-    // calcula duração em horas
-    const start = new Date(`${data}T${inicio}`);
-    const end = new Date(`${data}T${fim}`);
-    const diffMs = end - start;
-    obj.duracaoHoras = (diffMs > 0) ? (diffMs / (1000 * 60 * 60)).toFixed(1) : "0";
-  }
-
-  obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
-  obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
-  return obj;
-}
-
+      const fd = new FormData(form);
+      const obj = Object.fromEntries(fd.entries());
+      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
+      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
+      return obj;
+    }
 
     /* ==============================
        Ações: Editar / Concluir / Excluir
@@ -1506,12 +1447,7 @@ state.reservas = data.map((r,i)=> {
       buildCalendar(); updateSummary();
     }
 
-    async function refreshAll() {
-  await loadMonth(state.ano, state.mes);
-  buildCalendar();
-  updateSummary();
-}
-
+    function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
 // ... funções existentes de editar, concluir, excluir, etc ...
 
 /* ========== MODAL DE EDIÇÃO: SALVAR / ABRIR / CANCELAR ========== */
