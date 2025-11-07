@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1152,7 +1151,11 @@ function renderResItem(r) {
 
       <div class="meta"><b>Email:</b> ${r.email || '—'} • <b>Tel:</b> ${r.telefone || '—'}</div>
       <div class="meta"><b>Cardápio:</b> ${r.cardapio || '—'} • <b>Banco:</b> ${r.banco || '—'}</div>
-      <div class="meta"><b>Cardápio e observações:</b> ${r.observacoes || '—'}</div>
+      <div class="meta">
+  <b>Cardápio:</b> ${r.cardapio || '—'} • 
+  <button class="btn btn-ghost btn-cardapio" data-id="${r.id}" style="width:auto">📋 Ver Cardápio</button>
+</div>
+
 
       <div class="meta">
         Estimado: ${formatBRL(estimado)} •
@@ -1611,6 +1614,83 @@ baixarObsPDF.addEventListener('click', () => {
   doc.save('Observacao_MKIDS.pdf');
   toast('📄 PDF baixado com sucesso!');
 });
+// ========== ABRIR CARDÁPIO (POP-UP) ==========
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('btn-cardapio')) {
+    const id = e.target.dataset.id;
+    const reserva = state.reservas.find(r => String(r.id) === String(id));
+    if (!reserva) return;
+
+    // Monta o conteúdo completo do pop-up
+    const texto = reserva.observacoes || 'Sem observações registradas.';
+    obsPreview.innerHTML = `
+      <h3>${reserva.nome || 'Cliente'}</h3>
+      <p><b>Data:</b> ${new Date(reserva.datahora).toLocaleString('pt-BR')}</p>
+      <p><b>Local:</b> ${reserva.mesa || '—'}</p>
+      <p><b>Pessoas:</b> ${reserva.pessoas || '—'}</p>
+      <p><b>Cardápio:</b> ${reserva.cardapio || '—'}</p>
+      <h4>Observações:</h4>
+      <p>${texto.replace(/\n/g, '<br>')}</p>
+      <hr>
+      <p><b>Estimado:</b> ${formatBRL(reserva.valorEstimado)} • 
+         <b>Adiantado:</b> ${formatBRL(reserva.pagamentoAntecipado)} • 
+         <b>Final Pago:</b> ${formatBRL(reserva.valorFinalPago)}</p>
+      <p><b>Status:</b> ${reserva.status || '—'}</p>
+    `;
+
+    // Abre modal
+    obsModal.classList.add('show');
+    document.body.classList.add('modal-open');
+
+    // Atualiza evento de baixar PDF para pegar esta reserva
+    baixarObsPDF.onclick = () => gerarPDFReserva(reserva);
+  }
+});
+function gerarPDFReserva(r) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(255, 79, 161);
+  doc.text('Resumo da Reserva • M.KIDS', 105, 20, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(60, 60, 60);
+
+  const detalhes = [
+    `Nome: ${r.nome || ''}`,
+    `E-mail: ${r.email || ''}`,
+    `Telefone: ${r.telefone || ''}`,
+    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
+    `Local: ${r.mesa || ''}`,
+    `Pessoas: ${r.pessoas || ''}`,
+    `Cardápio: ${r.cardapio || ''}`,
+    '',
+    'Observações:',
+    (r.observacoes || 'Sem observações.'),
+    '',
+    `Valor Estimado: ${formatBRL(r.valorEstimado)}`,
+    `Adiantamento: ${formatBRL(r.pagamentoAntecipado)}`,
+    `Valor Final Pago: ${formatBRL(r.valorFinalPago)}`,
+    `Status: ${r.status || ''}`
+  ];
+
+  let y = 35;
+  detalhes.forEach(linha => {
+    const linhas = doc.splitTextToSize(linha, 170);
+    doc.text(linhas, 20, y);
+    y += (linhas.length * 6);
+  });
+
+  doc.setFontSize(10);
+  doc.setTextColor(138, 79, 255);
+  doc.text('Gerado automaticamente pelo Painel de Reservas M.KIDS', 105, 280, { align: 'center' });
+
+  doc.save(`Reserva_${r.nome || 'Cliente'}.pdf`);
+  toast('📄 PDF da reserva baixado!');
+}
 
 
 </script>
