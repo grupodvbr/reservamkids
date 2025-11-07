@@ -98,7 +98,7 @@ label{font-weight:600;font-size:.9rem;color:#444;}
 <div class="modal" id="formModal">
   <div class="sheet">
     <h3 id="formTitle">🎈 Nova Reserva</h3>
-    <form id="reservaForm">
+    <form id="reservaForm" enctype="multipart/form-data">
       <input type="hidden" name="id">
       <div class="section"><label>Nome Completo</label><input name="nome" required></div>
       <div class="section"><label>Email</label><input name="email" type="email"></div>
@@ -112,6 +112,7 @@ label{font-weight:600;font-size:.9rem;color:#444;}
       <div class="section"><label>Valor Estimado (R$)</label><input name="valorEstimado" type="number" step="0.01"></div>
       <div class="section"><label>Pagamento Antecipado (R$)</label><input name="pagamentoAntecipado" type="number" step="0.01"></div>
       <div class="section"><label>Banco / Método</label><select name="banco"><option value="">Selecione</option><option>Pix</option><option>Cartão</option><option>Dinheiro</option></select></div>
+      <div class="section"><label>Anexar Comprovante</label><input name="file" type="file" accept=".jpg,.jpeg,.png,.pdf"></div>
       <div class="section"><label>Observações</label><textarea name="observacoes"></textarea></div>
       <div class="row" style="justify-content:flex-end;">
         <button type="button" class="btn btn-del" id="cancelForm">Cancelar</button>
@@ -125,7 +126,7 @@ label{font-weight:600;font-size:.9rem;color:#444;}
 </div>
 
 <script>
-const endpoint="https://script.google.com/macros/s/AKfycbwph1BEeCGB0GMga2_YpfSDefO5WMcjuT00-ferdF-VPheToeJWuQ9J-D-uDnins4JfDQ/exec";
+const endpoint="https://script.google.com/macros/s/AKfycbxmhDPwQpj2xEssUTLWDZOfQIT52aBbp5WiChNbaQReY3xBdrW9GL7fcvzdPuikmJZ_TA/exec";
 const $=s=>document.querySelector(s);
 const toast=msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);}
 const overlay=show=>$("#overlay").style.display=show?"flex":"none";
@@ -134,9 +135,7 @@ const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$("#calDow").innerHTML=do
 const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[],editId:null};
 
 async function loadMonth(a,m){overlay(true);
-  try{
-    const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
-    const data=await res.json();
+  try{const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);const data=await res.json();
     state.reservas=(Array.isArray(data)?data:[]).map(r=>({...r,status:(r.status||'Pendente').toLowerCase()}));
   }catch(e){state.reservas=[];}
   buildCalendar();updateSummary();overlay(false);
@@ -189,6 +188,7 @@ function openDayModal(date,items){
     let btns="";
     if(r.status!=="concluída"&&r.status!=="concluida")btns+=`<button class='btn btn-green' onclick='finalizar("${r.id}")'>Finalizar</button>`;
     if(r.status!=="crédito")btns+=`<button class='btn btn-yellow' onclick='creditar("${r.id}")'>Crédito</button>`;
+    let anexBtn = r.arquivoURL ? `<a href="${r.arquivoURL}" target="_blank" class="btn btn-blue">📎 Ver Anexo</a>` : "";
     c.innerHTML+=`
     <div class='res-item'>
       <button class='edit-btn' onclick='editar("${r.id}")'>✏️</button>
@@ -200,10 +200,11 @@ function openDayModal(date,items){
       <div class='hint'>🧾 Final Pago: R$ ${(+r.valorFinalPago).toFixed(2)}</div>
       <div class='hint'>🪙 A Receber: R$ ${aReceber.toFixed(2)}</div>
       <div class='hint'>📝 ${r.observacoes||"-"}</div>
-      <div class='row' style='margin-top:8px;justify-content:flex-end'>${btns}
+      <div class='row' style='margin-top:8px;justify-content:flex-end'>${anexBtn} ${btns}
         <button class='btn btn-del' onclick='excluir("${r.id}")'>Excluir</button>
       </div>
-    </div>`;});
+    </div>`;
+  });
   $("#dayModal").classList.add("show");
 }
 $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
@@ -211,9 +212,11 @@ $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove
 async function finalizar(id){const val=prompt("Valor final pago:");if(!val)return;overlay(true);
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"concluir",id,valorFinalPago:val,status:"Concluída"})});
   toast("✅ Finalizado!");loadMonth(state.ano,state.mes);overlay(false);}
+
 async function creditar(id){overlay(true);
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"status",id,status:"Crédito"})});
   toast("💚 Marcado como crédito!");loadMonth(state.ano,state.mes);overlay(false);}
+
 async function excluir(id){if(!confirm("Excluir?"))return;overlay(true);
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"excluir",id})});
   toast("🗑️ Excluído!");loadMonth(state.ano,state.mes);overlay(false);}
@@ -233,7 +236,16 @@ $("#cancelForm").onclick=()=>$("#formModal").classList.remove("show");
 $("#reservaForm").onsubmit=async e=>{
   e.preventDefault();overlay(true);
   const fd=new FormData(e.target);
-  fd.append("acao",state.editId?"editar":"cadastrar");
+  let nomeArquivo="", arquivoURL="";
+  const file=fd.get("file");
+  if(file && file.size>0){
+    const up=new FormData();up.append("acao","upload");up.append("file",file);
+    const res=await fetch(endpoint,{method:"POST",body:up});const j=await res.json();
+    if(j.ok){nomeArquivo=j.nomeArquivo;arquivoURL=j.arquivoURL;}
+  }
+  fd.delete("file");fd.append("acao",state.editId?"editar":"cadastrar");
+  if(nomeArquivo)fd.append("nomeArquivo",nomeArquivo);
+  if(arquivoURL)fd.append("arquivoURL",arquivoURL);
   await fetch(endpoint,{method:"POST",body:fd});
   toast(state.editId?"✏️ Atualizado!":"✅ Salvo!");
   $("#formModal").classList.remove("show");e.target.reset();state.editId=null;
