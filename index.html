@@ -983,28 +983,62 @@ body.modal-open {
     calDow.innerHTML = dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
     function buildCalendar(){
-      const {mes, ano} = state;
-      calTitle.textContent = `${monthNames[mes]} de ${ano}`;
-      calGrid.innerHTML = '';
-      const first = new Date(ano, mes, 1);
-      const start = new Date(first);
-      const startDay = (first.getDay()+7)%7;
-      start.setDate(1 - startDay);
+  const {mes, ano} = state;
+  calTitle.textContent = `${monthNames[mes]} de ${ano}`;
+  calGrid.innerHTML = '';
+  const first = new Date(ano, mes, 1);
+  const start = new Date(first);
+  const startDay = (first.getDay()+7)%7;
+  start.setDate(1 - startDay);
 
-      for(let i=0;i<42;i++){
-        const d = new Date(start); d.setDate(start.getDate()+i);
-        const inMonth = d.getMonth()===mes;
-        const cell = document.createElement('button');
-        cell.type='button';
-        cell.className = 'cal-day' + (inMonth? '':' out');
-        cell.dataset.date = ymd(d);
+  for(let i=0;i<42;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const inMonth = d.getMonth()===mes;
+    const cell = document.createElement('button');
+    cell.type='button';
+    cell.className = 'cal-day' + (inMonth? '':' out');
+    cell.dataset.date = ymd(d);
 
-       const items = state.reservas.filter(r=>{
-  const dataCampo = r.data || r.Data || '';
-  const horaCampo = r.horaInicio || r.HoraInicio || '';
-  const dataHora = dataCampo ? `${dataCampo}T${horaCampo || '00:00'}` : '';
-  return dataHora && ymd(new Date(dataHora)) === ymd(d);
-});
+    // ✅ CORRIGIDO: usa Data + HoraInicio diretamente
+    const items = state.reservas.filter(r=>{
+      const dataCampo = r.data || r.Data || '';
+      const horaCampo = r.horaInicio || r.HoraInicio || '';
+      if (!dataCampo) return false;
+      const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
+      return ymd(new Date(dataHora)) === ymd(d);
+    });
+
+    // Agrupamento e etiquetas
+    const norm = s => (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+    const groups = new Map();
+    for (const r of items) {
+      const label = (r.mesa || '—').trim();
+      const key   = norm(label);
+      groups.set(key, { label, count:(groups.get(key)?.count||0)+1 });
+    }
+    const isVipKey = k => k === 'SALA VIP' || k === 'SALA VIP 2';
+    const sectorTags = Array.from(groups.entries()).map(([key, info]) => {
+      const vip = isVipKey(key);
+      const css = vip ? 't-vip' : 't-outros';
+      return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
+    }).join('');
+
+    const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
+    const done = items.filter(r=> r.status==='Concluída').length;
+
+    cell.innerHTML = `
+      <div class="num">${d.getDate()}</div>
+      <div class="tags">
+        ${sectorTags}
+        ${pend ? `<span class="tag t-pend">Pend: ${pend}</span>` : ''}
+        ${done ? `<span class="tag t-done">Conc: ${done}</span>` : ''}
+      </div>
+    `;
+    cell.addEventListener('click', ()=> openDayModal(d, items));
+    calGrid.appendChild(cell);
+  }
+}
+
 
 
 
@@ -1056,49 +1090,41 @@ function sumPagamentos(r){
 
 function updateSummary() {
   if (!state.reservas || !state.reservas.length) {
-    document.querySelector('#kpiAntecipado').textContent = 'R$ 0,00';
-    document.querySelector('#kpiFinalPago').textContent = 'R$ 0,00';
-    document.querySelector('#kpiAReceber').textContent = 'R$ 0,00';
-    document.querySelector('#kpiTotalMes').textContent = 'R$ 0,00';
+    ['#kpiAntecipado','#kpiFinalPago','#kpiAReceber','#kpiTotalMes']
+      .forEach(sel => document.querySelector(sel).textContent = 'R$ 0,00');
     return;
   }
 
   const { mes, ano } = state;
-const reservasMes = state.reservas.filter(r => {
-  const dataCampo = r.data || r.Data || '';
-  const horaCampo = r.horaInicio || r.HoraInicio || '';
-  if (!dataCampo) return false;
-  const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
-  const d = new Date(dataHora);
-  return d.getMonth() === mes && d.getFullYear() === ano;
-});
-
-
+  const reservasMes = state.reservas.filter(r => {
+    const dataCampo = r.data || r.Data || '';
+    const horaCampo = r.horaInicio || r.HoraInicio || '';
+    if (!dataCampo) return false;
+    const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
+    const d = new Date(dataHora);
+    return d.getMonth() === mes && d.getFullYear() === ano;
+  });
 
   const parse = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
-  // Valores totais
-  let antecipado = 0;
-  let finalPago = 0;
-  let estimado = 0;
-
+  let antecipado = 0, finalPago = 0, estimado = 0;
   reservasMes.forEach(r => {
     antecipado += parse(r.pagamentoAntecipado || r.PagamentoAntecipado);
-    finalPago += parse(r.valorFinalPago || r.ValorFinalPago);
-    estimado += parse(r.valorEstimado || r.ValorEstimado);
+    finalPago  += parse(r.valorFinalPago || r.ValorFinalPago);
+    estimado   += parse(r.valorEstimado || r.ValorEstimado);
   });
 
   const aReceber = Math.max(estimado - (antecipado + finalPago), 0);
   const totalMes = antecipado + finalPago;
 
-  // Atualiza os cards
-  document.querySelector('#kpiAntecipado').textContent = formatBRL(antecipado);
-  document.querySelector('#kpiFinalPago').textContent = formatBRL(finalPago);
-  document.querySelector('#kpiAReceber').textContent = formatBRL(aReceber);
-  document.querySelector('#kpiTotalMes').textContent = formatBRL(totalMes);
+  $('#kpiAntecipado').textContent = formatBRL(antecipado);
+  $('#kpiFinalPago').textContent  = formatBRL(finalPago);
+  $('#kpiAReceber').textContent   = formatBRL(aReceber);
+  $('#kpiTotalMes').textContent   = formatBRL(totalMes);
 
-  console.log('📊 Resumo do mês atualizado', { antecipado, finalPago, estimado, aReceber, totalMes });
+  console.log('📊 Resumo atualizado', { antecipado, finalPago, estimado, aReceber, totalMes });
 }
+
 
 
 
