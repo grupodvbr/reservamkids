@@ -232,14 +232,6 @@ function abrirFinalizar(id){
 
 async function marcarCredito(id){
   if(!confirm("Marcar reserva como crédito?"))return;
- Continuando o trecho final completo do **index.html** 👇  
-(já com todas as funções completas, incluindo *Crédito*, *Excluir*, *Salvar*, e carregamento automático do calendário)
-
----
-
-```html
-async function marcarCredito(id){
-  if(!confirm("Marcar reserva como crédito?"))return;
   $("#overlay").style.display="flex";
   await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"status",id,status:"Crédito"})});
   toast("💚 Reserva marcada como crédito!");
