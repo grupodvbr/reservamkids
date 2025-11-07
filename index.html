@@ -943,49 +943,48 @@ function sumPagamentos(r){
 }
 
 function updateSummary() {
+  if (!state.reservas || !state.reservas.length) {
+    document.querySelector('#kpiAntecipado').textContent = 'R$ 0,00';
+    document.querySelector('#kpiFinalPago').textContent = 'R$ 0,00';
+    document.querySelector('#kpiAReceber').textContent = 'R$ 0,00';
+    document.querySelector('#kpiTotalMes').textContent = 'R$ 0,00';
+    return;
+  }
+
   const { mes, ano } = state;
 
-  if (!state.reservas?.length) return;
-
-  const inMonth = state.reservas.filter(r => {
+  // Filtra as reservas do mês atual
+  const reservasMes = state.reservas.filter(r => {
     if (!r.datahora) return false;
     const d = new Date(r.datahora);
     return d.getMonth() === mes && d.getFullYear() === ano;
   });
 
-  const toNum = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+  const parse = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
-  // pega os valores corretos mesmo que venham com letra maiúscula
-  const getVal = (r, keys) => {
-    for (const k of keys) {
-      if (r[k] !== undefined && r[k] !== '') return toNum(r[k]);
-    }
-    return 0;
-  };
+  // Valores totais
+  let antecipado = 0;
+  let finalPago = 0;
+  let estimado = 0;
 
-  // compatibilidade total com nomes da planilha
-  const antecipado = inMonth.reduce(
-    (acc, r) => acc + getVal(r, ['PagamentoAntecipado', 'pagamentoAntecipado']),
-    0
-  );
-  const finalPago = inMonth.reduce(
-    (acc, r) => acc + getVal(r, ['ValorFinalPago', 'valorFinalPago']),
-    0
-  );
-  const estimado = inMonth.reduce(
-    (acc, r) => acc + getVal(r, ['ValorEstimado', 'valorEstimado']),
-    0
-  );
+  reservasMes.forEach(r => {
+    antecipado += parse(r.pagamentoAntecipado || r.PagamentoAntecipado);
+    finalPago += parse(r.valorFinalPago || r.ValorFinalPago);
+    estimado += parse(r.valorEstimado || r.ValorEstimado);
+  });
 
   const aReceber = Math.max(estimado - (antecipado + finalPago), 0);
+  const totalMes = antecipado + finalPago;
 
+  // Atualiza os cards
   document.querySelector('#kpiAntecipado').textContent = formatBRL(antecipado);
   document.querySelector('#kpiFinalPago').textContent = formatBRL(finalPago);
   document.querySelector('#kpiAReceber').textContent = formatBRL(aReceber);
-  document.querySelector('#kpiTotalMes').textContent = formatBRL(antecipado + finalPago);
+  document.querySelector('#kpiTotalMes').textContent = formatBRL(totalMes);
 
-  console.log('✅ Resumo atualizado:', { antecipado, finalPago, estimado, aReceber });
+  console.log('📊 Resumo do mês atualizado', { antecipado, finalPago, estimado, aReceber, totalMes });
 }
+
 
 
 
@@ -1122,39 +1121,53 @@ function renderResItem(r) {
     }
 
     form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; }
-      if(!validateExtra()) return;
-      spinner.classList.add('show'); submitBtn.disabled = true;
+  e.preventDefault();
+  if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; }
+  if(!validateExtra()) return;
+  spinner.classList.add('show'); submitBtn.disabled = true;
 
-      const payload = collectPayload();
-      const file = inputArquivo.files[0];
-      if(file){
-        try{
-          const b64 = await toBase64(file);
-          payload.arquivo = String(b64).split(',')[1];
-          payload.nomeArquivo = file.name;
-        }catch(e){ console.error(e); toast('Falha ao ler o arquivo.'); }
-      }
+  const payload = collectPayload();
+  const file = inputArquivo.files[0];
 
-      let resp;
-      if(state.editingId){
-        resp = await api.atualizar(state.editingId, payload);
-      }else{
-        resp = await api.cadastrar(payload);
-      }
-
-      if(resp.ok){
-        toast('✅ ' + (resp.message||'OK'));
-        await loadMonth(state.ano, state.mes);
-        form.reset(); statusChip.textContent='PENDENTE'; inputData.min = nowLocalMin();
-        fileBox.style.display='none'; cancelEditBtn.style.display='none'; state.editingId=null; $('#reservaId').value='';
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
-
+  if (file) {
+    try {
+      const base64 = await toBase64(file);
+      payload.arquivo = base64.split(',')[1]; // tira o prefixo data:
+      payload.nomeArquivo = file.name;
+    } catch (err) {
+      console.error(err);
+      toast('Falha ao ler o arquivo.');
       spinner.classList.remove('show'); submitBtn.disabled = false;
-    });
+      return;
+    }
+  }
+
+  let resp;
+  if(state.editingId){
+    payload.acao = 'atualizar';
+    payload.id = state.editingId;
+    resp = await api.atualizar(state.editingId, payload);
+  } else {
+    payload.acao = 'cadastrar';
+    resp = await api.cadastrar(payload);
+  }
+
+  if(resp.ok){
+    toast('✅ ' + (resp.message||'Reserva salva!'));
+    await loadMonth(state.ano, state.mes); // recarrega dados
+    updateSummary(); // atualiza cards de resumo
+    form.reset();
+    fileBox.style.display='none';
+    statusChip.textContent='PENDENTE';
+    cancelEditBtn.style.display='none';
+    state.editingId=null;
+  }else{
+    toast('⚠️ ' + resp.message);
+  }
+
+  spinner.classList.remove('show'); submitBtn.disabled = false;
+});
+
 
     function collectPayload(){
       const fd = new FormData(form);
