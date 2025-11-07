@@ -553,7 +553,6 @@ body.modal-open {
       <input type="hidden" name="acao" value="cadastrar" />
       <input type="hidden" name="status" value="Pendente" />
       <input type="hidden" name="id" id="reservaId" value="" />
-       <input type="hidden" id="datahora" name="datahora" />
 
       <div class="section">
         <h3>👤 Dados do Cliente</h3>
@@ -612,22 +611,10 @@ body.modal-open {
           </div>
         </div>
 
-        <label for="data">Data da Reserva <span style="color:var(--danger)">*</span></label>
-<input type="date" id="data" name="data" required />
-
-<div class="inline-grid" style="margin-top:10px;">
-  <div>
-    <label for="horaInicio">Hora de Início <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaInicio" name="horaInicio" required />
-  </div>
-  <div>
-    <label for="horaFim">Hora de Término <span style="color:var(--danger)">*</span></label>
-    <input type="time" id="horaFim" name="horaFim" required />
-  </div>
-</div>
-
-<div class="hint">A hora de término deve ser posterior à de início.</div>
-
+        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+        <input type="datetime-local" id="datahora" name="datahora" required />
+        <div class="hint">Não é permitido escolher data passada.</div>
+      </div>
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -891,7 +878,7 @@ body.modal-open {
     /* ==============================
        Config
     ============================== */
-    const endpoint = "https://script.google.com/macros/s/AKfycbyLIhiPpxnMm8c1hJH2Q9QQX-ahMST8Vai8s6ERUh6KMfLPazCYEnxb2g9S5bNW6LxiEw/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbyxu7-PXfPrbqywc6WihyWxTKVNf1nSFVr56XNnZpTTu0VfMvst27Hrrzit3xENs2lOMw/exec";
 
     /* ==============================
        Helpers
@@ -980,147 +967,26 @@ body.modal-open {
     const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const calTitle = $('#calTitle'), calDow = $('#calDow'), calGrid = $('#calGrid');
-   /* ========== OVERLAY DE CARREGAMENTO COM SPINNER INFANTIL ========== */
-const overlay = document.createElement('div');
-overlay.id = 'calOverlay';
-overlay.style.position = 'absolute';
-overlay.style.inset = 0;
-overlay.style.borderRadius = '20px';
-overlay.style.display = 'none';
-overlay.innerHTML = `
-  <div style="
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    background:rgba(255,255,255,0.85);
-    backdrop-filter:blur(3px);
-    border-radius:20px;
-    text-align:center;
-    font-weight:700; color:#ff4fa1;
-    font-size:1.1rem;">
-    <div class="spinner-ball" style="
-      width:40px; height:40px;
-      border-radius:50%;
-      border:6px solid #ffb3de;
-      border-top-color:#ffa64b;
-      animation: spin 1s linear infinite;
-      margin-bottom:10px;">
-    </div>
-    <span id="overlayMsg">⏳ Carregando reservas...</span>
-  </div>
-`;
-
-$('#calGrid').parentElement.style.position = 'relative';
-$('#calGrid').parentElement.appendChild(overlay);
-
-function showOverlay(msg="⏳ Carregando reservas...") {
-  $('#overlayMsg').textContent = msg;
-  overlay.style.display = 'flex';
-}
-function hideOverlay() {
-  overlay.style.display = 'none';
-}
-
-      /* ========== OVERLAY DE CARREGAMENTO ========== */
-const overlay = document.createElement('div');
-overlay.id = 'calOverlay';
-overlay.innerHTML = `
-  <div style="
-    position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    background:rgba(255,255,255,0.75);
-    backdrop-filter:blur(3px);
-    font-weight:700; color:#ff4fa1;
-    font-size:1.1rem; border-radius:20px;">
-    ⏳ Carregando reservas...
-  </div>`;
-overlay.style.display = 'none';
-overlay.style.position = 'absolute';
-overlay.style.inset = 0;
-overlay.style.borderRadius = '20px';
-$('#calGrid').parentElement.style.position = 'relative';
-$('#calGrid').parentElement.appendChild(overlay);
-
-function showOverlay(msg="Carregando reservas...") {
-  overlay.innerHTML = `
-    <div style="
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(255,255,255,0.75);
-      backdrop-filter:blur(3px);
-      font-weight:700; color:#ff4fa1;
-      font-size:1.1rem; border-radius:20px;">
-      ${msg}
-    </div>`;
-  overlay.style.display = 'flex';
-}
-
-function hideOverlay() {
-  overlay.style.display = 'none';
-}
-
     calDow.innerHTML = dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
     function buildCalendar(){
-  const {mes, ano} = state;
-  calTitle.textContent = `${monthNames[mes]} de ${ano}`;
-  calGrid.innerHTML = '';
-  const first = new Date(ano, mes, 1);
-  const start = new Date(first);
-  const startDay = (first.getDay()+7)%7;
-  start.setDate(1 - startDay);
+      const {mes, ano} = state;
+      calTitle.textContent = `${monthNames[mes]} de ${ano}`;
+      calGrid.innerHTML = '';
+      const first = new Date(ano, mes, 1);
+      const start = new Date(first);
+      const startDay = (first.getDay()+7)%7;
+      start.setDate(1 - startDay);
 
-  for(let i=0;i<42;i++){
-    const d = new Date(start); d.setDate(start.getDate()+i);
-    const inMonth = d.getMonth()===mes;
-    const cell = document.createElement('button');
-    cell.type='button';
-    cell.className = 'cal-day' + (inMonth? '':' out');
-    cell.dataset.date = ymd(d);
+      for(let i=0;i<42;i++){
+        const d = new Date(start); d.setDate(start.getDate()+i);
+        const inMonth = d.getMonth()===mes;
+        const cell = document.createElement('button');
+        cell.type='button';
+        cell.className = 'cal-day' + (inMonth? '':' out');
+        cell.dataset.date = ymd(d);
 
-    // ✅ CORRIGIDO: usa Data + HoraInicio diretamente
-    const items = state.reservas.filter(r=>{
-      const dataCampo = r.data || r.Data || '';
-      const horaCampo = r.horaInicio || r.HoraInicio || '';
-      if (!dataCampo) return false;
-      const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
-      return ymd(new Date(dataHora)) === ymd(d);
-    });
-
-    // Agrupamento e etiquetas
-    const norm = s => (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
-    const groups = new Map();
-    for (const r of items) {
-      const label = (r.mesa || '—').trim();
-      const key   = norm(label);
-      groups.set(key, { label, count:(groups.get(key)?.count||0)+1 });
-    }
-    const isVipKey = k => k === 'SALA VIP' || k === 'SALA VIP 2';
-    const sectorTags = Array.from(groups.entries()).map(([key, info]) => {
-      const vip = isVipKey(key);
-      const css = vip ? 't-vip' : 't-outros';
-      return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
-    }).join('');
-
-    const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
-    const done = items.filter(r=> r.status==='Concluída').length;
-
-    cell.innerHTML = `
-      <div class="num">${d.getDate()}</div>
-      <div class="tags">
-        ${sectorTags}
-        ${pend ? `<span class="tag t-pend">Pend: ${pend}</span>` : ''}
-        ${done ? `<span class="tag t-done">Conc: ${done}</span>` : ''}
-      </div>
-    `;
-    cell.addEventListener('click', ()=> openDayModal(d, items));
-    calGrid.appendChild(cell);
-  }
-}
-
-
-
-
+        const items = state.reservas.filter(r=> r.datahora && ymd(new Date(r.datahora))===ymd(d));
 
         // Agrupar por setor e colorir VIP vs OUTROS
         const norm = s => (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
@@ -1169,41 +1035,46 @@ function sumPagamentos(r){
 
 function updateSummary() {
   if (!state.reservas || !state.reservas.length) {
-    ['#kpiAntecipado','#kpiFinalPago','#kpiAReceber','#kpiTotalMes']
-      .forEach(sel => document.querySelector(sel).textContent = 'R$ 0,00');
+    document.querySelector('#kpiAntecipado').textContent = 'R$ 0,00';
+    document.querySelector('#kpiFinalPago').textContent = 'R$ 0,00';
+    document.querySelector('#kpiAReceber').textContent = 'R$ 0,00';
+    document.querySelector('#kpiTotalMes').textContent = 'R$ 0,00';
     return;
   }
 
   const { mes, ano } = state;
+
+  // Filtra as reservas do mês atual
   const reservasMes = state.reservas.filter(r => {
-    const dataCampo = r.data || r.Data || '';
-    const horaCampo = r.horaInicio || r.HoraInicio || '';
-    if (!dataCampo) return false;
-    const dataHora = `${dataCampo}T${horaCampo || '00:00'}`;
-    const d = new Date(dataHora);
+    if (!r.datahora) return false;
+    const d = new Date(r.datahora);
     return d.getMonth() === mes && d.getFullYear() === ano;
   });
 
   const parse = v => Number(String(v || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
 
-  let antecipado = 0, finalPago = 0, estimado = 0;
+  // Valores totais
+  let antecipado = 0;
+  let finalPago = 0;
+  let estimado = 0;
+
   reservasMes.forEach(r => {
     antecipado += parse(r.pagamentoAntecipado || r.PagamentoAntecipado);
-    finalPago  += parse(r.valorFinalPago || r.ValorFinalPago);
-    estimado   += parse(r.valorEstimado || r.ValorEstimado);
+    finalPago += parse(r.valorFinalPago || r.ValorFinalPago);
+    estimado += parse(r.valorEstimado || r.ValorEstimado);
   });
 
   const aReceber = Math.max(estimado - (antecipado + finalPago), 0);
   const totalMes = antecipado + finalPago;
 
-  $('#kpiAntecipado').textContent = formatBRL(antecipado);
-  $('#kpiFinalPago').textContent  = formatBRL(finalPago);
-  $('#kpiAReceber').textContent   = formatBRL(aReceber);
-  $('#kpiTotalMes').textContent   = formatBRL(totalMes);
+  // Atualiza os cards
+  document.querySelector('#kpiAntecipado').textContent = formatBRL(antecipado);
+  document.querySelector('#kpiFinalPago').textContent = formatBRL(finalPago);
+  document.querySelector('#kpiAReceber').textContent = formatBRL(aReceber);
+  document.querySelector('#kpiTotalMes').textContent = formatBRL(totalMes);
 
-  console.log('📊 Resumo atualizado', { antecipado, finalPago, estimado, aReceber, totalMes });
+  console.log('📊 Resumo do mês atualizado', { antecipado, finalPago, estimado, aReceber, totalMes });
 }
-
 
 
 
@@ -1235,11 +1106,7 @@ function updateSummary() {
     dayModal.addEventListener('click', (e)=>{ if(e.target===dayModal) dayModal.classList.remove('show'); });
 
 function renderResItem(r) {
-  // ✅ monta a faixa de horário
-const horaInicio = r.horaInicio || r.HoraInicio || '';
-const horaFim = r.horaFim || r.HoraFim || '';
-const hora = horaInicio && horaFim ? `${horaInicio} às ${horaFim}` : (horaInicio || '—');
-
+  const hora = new Date(r.datahora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const status = r.status || 'Pendente';
 
   const hasFile = r.arquivoURL || r.ArquivoURL || r.arquivourl || '';
@@ -1320,7 +1187,7 @@ const hora = horaInicio && horaFim ? `${horaInicio} às ${horaFim}` : (horaInici
     const clearFile = $('#clearFile');
     const inputData = $('#datahora');
 
-    document.getElementById('data').min = new Date().toISOString().split('T')[0];
+    inputData.min = nowLocalMin();
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
     ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
 
@@ -1342,14 +1209,6 @@ const hora = horaInicio && horaFim ? `${horaInicio} às ${horaFim}` : (horaInici
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
     function validateExtra(){
-      const hIni = document.getElementById('horaInicio').value;
-const hFim = document.getElementById('horaFim').value;
-
-if (hIni && hFim && hFim <= hIni) {
-  toast('O horário de término deve ser posterior ao de início.');
-  document.getElementById('horaFim').focus();
-  return false;
-}
       if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
       const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
       if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
@@ -1361,11 +1220,6 @@ if (hIni && hFim && hFim <= hIni) {
   if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; }
   if(!validateExtra()) return;
   spinner.classList.add('show'); submitBtn.disabled = true;
- const data = document.getElementById('data').value;
-const hIni = document.getElementById('horaInicio').value;
-if (data && hIni) {
-  document.getElementById('datahora').value = `${data}T${hIni}`;
-}
 
   const payload = collectPayload();
   const file = inputArquivo.files[0];
@@ -1559,68 +1413,41 @@ async function onClickExcluir(e){
     $('#nextMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()+1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#todayBtn').addEventListener('click', ()=>{ const t=new Date(); state.mes=t.getMonth(); state.ano=t.getFullYear(); refreshAll(); });
     $('#refreshBtn').addEventListener('click', ()=> refreshAll());
-async function loadMonth(ano, mes) {
-  const calGrid = document.getElementById('calGrid');
-  const calTitle = document.getElementById('calTitle');
 
-  // Mostra o calendário vazio e o overlay de carregamento
-  buildCalendar();
-  showOverlay('⏳ Carregando reservas...');
+    async function loadMonth(ano, mes){
+      try{
+        const data = await api.listar(ano, mes);
+state.reservas = data.map((r,i)=> {
+  const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
+  return {
+    id: idReal || `ROW-${i+1}`,
+    _semIdReal: !idReal,
+    nome: r.nome||r.Nome||'',
+    email:r.email||r.Email||'',
+    telefone: r.telefone || r.Telefone || r.Fone || '',
+    pessoas:r.pessoas||r.Pessoas||'',
+    mesa:r.mesa||r.Mesa||r.Local||'',
+    cardapio:r.cardapio||r.Cardapio||'',
+    observacoes: r.observacoes || r.Observacoes || r.Obs || '',
+    datahora: r.datahora || r.DataHora || r.data || r.Data || '',
+    valorEstimado: parseBRL(String(r.valorEstimado ?? r.ValorEstimado ?? '0')),
+    pagamentoAntecipado: parseBRL(String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0')),
+    valorFinalPago: parseBRL(String(r.valorFinalPago ?? r.FinalPago ?? '0')),
 
-  try {
-    const data = await api.listar(ano, mes);
-    hideOverlay();
+    banco: r.banco || r.Banco || '',
+    status: r.status || r.Status || 'Pendente',
+    ...r
+  };
+});
 
-    if (!Array.isArray(data) || data.length === 0) {
-      calGrid.innerHTML += `
-        <div style="
-          grid-column: 1 / -1;
-          text-align: center;
-          color: #8a4fff;
-          font-weight: 700;
-          background: #fff8ff;
-          border: 2px dashed #ffd8f2;
-          border-radius: 16px;
-          padding: 20px;">
-          💡 Nenhuma reserva encontrada neste mês.
-        </div>`;
-      state.reservas = [];
-      updateSummary();
-      return;
+      }catch(e){
+        state.reservas = [];
+        toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
+      }
+      buildCalendar(); updateSummary();
     }
 
-    // popula estado e redesenha com os dados
-    state.reservas = data.map((r, i) => ({
-      id: r.id ?? r.ID ?? `ROW-${i+1}`,
-      nome: r.nome || r.Nome || '',
-      email: r.email || r.Email || '',
-      telefone: r.telefone || r.Telefone || '',
-      pessoas: r.pessoas || r.Pessoas || '',
-      mesa: r.mesa || r.Mesa || '',
-      cardapio: r.cardapio || r.Cardapio || '',
-      data: r.data || r.Data || '',
-      horaInicio: r.horaInicio || r.HoraInicio || '',
-      horaFim: r.horaFim || r.HoraFim || '',
-      valorEstimado: parseBRL(r.valorEstimado || r.ValorEstimado || '0'),
-      pagamentoAntecipado: parseBRL(r.pagamentoAntecipado || r.PagamentoAntecipado || '0'),
-      valorFinalPago: parseBRL(r.valorFinalPago || r.ValorFinalPago || '0'),
-      banco: r.banco || r.Banco || '',
-      status: r.status || r.Status || 'Pendente',
-      observacoes: r.observacoes || r.Observacoes || ''
-    }));
-
-    buildCalendar();
-    updateSummary();
-  } catch (e) {
-    console.error("❌ Erro ao carregar mês:", e);
-    showOverlay(`⚠️ Erro ao carregar dados<br><small>${e.message}</small>`);
-    state.reservas = [];
-    updateSummary();
-    toast('⚠️ Erro ao consultar os dados para o calendário.');
-  }
-}
-
-
+    function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
 // ... funções existentes de editar, concluir, excluir, etc ...
 
 /* ========== MODAL DE EDIÇÃO: SALVAR / ABRIR / CANCELAR ========== */
@@ -1708,29 +1535,16 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
   }
 });
 
-/* ==============================
-   Atualiza tudo (Calendário + Resumo)
-   ============================== */
-async function refreshAll() {
-  try {
-    // Mostra spinner opcional
-    console.log(`🔄 Atualizando mês ${state.mes + 1}/${state.ano}...`);
-    await loadMonth(state.ano, state.mes);
-    buildCalendar();
-    updateSummary();
-    console.log("✅ Calendário renderizado com sucesso!");
-  } catch (e) {
-    console.error("Erro ao atualizar:", e);
-    toast("⚠️ Falha ao atualizar o calendário");
-  }
-}
 
 
-window.addEventListener('DOMContentLoaded', async ()=>{
-  $('#datahora').min = nowLocalMin();
-  await refreshAll(); // agora a função existe e aguarda o carregamento
-});
 
+   
+
+    // Inicialização
+    window.addEventListener('DOMContentLoaded', ()=>{
+      $('#datahora').min = nowLocalMin();
+      refreshAll();
+    });
 
 
 // ========== VISUALIZAR / BAIXAR OBSERVAÇÃO ==========
@@ -1807,7 +1621,7 @@ document.addEventListener('click', async (e) => {
     const texto = reserva.observacoes || 'Sem observações registradas.';
     obsPreview.innerHTML = `
       <h3>${reserva.nome || 'Cliente'}</h3>
-     <p><b>Data:</b> ${new Date(`${reserva.data || reserva.Data}T${reserva.horaInicio || reserva.HoraInicio || '00:00'}`).toLocaleString('pt-BR')}</p>
+      <p><b>Data:</b> ${new Date(reserva.datahora).toLocaleString('pt-BR')}</p>
       <p><b>Local:</b> ${reserva.mesa || '—'}</p>
       <p><b>Pessoas:</b> ${reserva.pessoas || '—'}</p>
       <p><b>Cardápio:</b> ${reserva.cardapio || '—'}</p>
@@ -1845,7 +1659,7 @@ function gerarPDFReserva(r) {
     `Nome: ${r.nome || ''}`,
     `E-mail: ${r.email || ''}`,
     `Telefone: ${r.telefone || ''}`,
-   `Data e Hora: ${new Date(`${r.data || r.Data}T${r.horaInicio || r.HoraInicio || '00:00'}`).toLocaleString('pt-BR')}`,
+    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
     `Local: ${r.mesa || ''}`,
     `Pessoas: ${r.pessoas || ''}`,
     `Cardápio: ${r.cardapio || ''}`,
