@@ -348,25 +348,30 @@ textarea {
   position: fixed;
   inset: 0;
   background: rgba(255, 192, 203, 0.45);
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   z-index: 100;
   transition: 0.3s;
+  overflow-y: auto; /* ✅ permite rolagem dentro do modal */
 }
 
 .modal.show {
   display: flex;
+  overflow-y: auto;
 }
 
 .sheet {
-  border-radius: 24px 24px 0 0;
+  border-radius: 24px;
   background: #fffafc;
   width: 100%;
   max-width: 600px;
   padding: 18px;
   box-shadow: var(--shadow);
   animation: slideUp 0.3s ease-out;
+  max-height: 90vh;          /* ✅ limita a altura */
+  overflow-y: auto;          /* ✅ rola conteúdo */
 }
+
 
 @keyframes slideUp {
   from { transform: translateY(50px); opacity: 0; }
