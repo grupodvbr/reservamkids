@@ -352,12 +352,16 @@ textarea {
   justify-content: center;
   z-index: 100;
   transition: 0.3s;
-  overflow-y: auto; /* ✅ permite rolagem dentro do modal */
+  overflow-y: auto; /* ✅ rola dentro do modal */
 }
 
 .modal.show {
   display: flex;
   overflow-y: auto;
+}
+
+body.modal-open {
+  overflow: hidden; /* ✅ trava rolagem do fundo */
 }
 
 .sheet {
@@ -369,8 +373,9 @@ textarea {
   box-shadow: var(--shadow);
   animation: slideUp 0.3s ease-out;
   max-height: 90vh;          /* ✅ limita a altura */
-  overflow-y: auto;          /* ✅ rola conteúdo */
+  overflow-y: auto;          /* ✅ rola conteúdo do modal */
 }
+
 
 
 @keyframes slideUp {
@@ -946,12 +951,9 @@ function updateSummary(){
   });
 
   const sum = (arr, fn) => arr.reduce((a,b)=>a+fn(b),0);
-
-  // ✅ Antecipado = campo principal + todos os pagamentos (Pagamento1, PagamentoExtra1...)
   const adiantado = sum(inMonth, r => (r.pagamentoAntecipado||0) + sumPagamentos(r));
   const finalPago  = sum(inMonth, r => (r.valorFinalPago||0));
 
-  // ✅ A receber = Estimado - (Adiantado + Final Pago)
   const aReceber = sum(
     inMonth.filter(r=> !['Concluída','Cancelada'].includes(r.status||'')),
     r => {
@@ -966,6 +968,7 @@ function updateSummary(){
   $('#kpiAReceber').textContent   = formatBRL(aReceber);
   $('#kpiTotalMes').textContent   = formatBRL(adiantado + finalPago);
 }
+
 
 
 
@@ -1316,7 +1319,22 @@ function openEditModal(reserva) {
   }
 
   editModal.classList.add('show');
+  document.body.classList.add('modal-open'); // ✅ trava rolagem do fundo
 }
+
+$('#cancelEditModal').addEventListener('click', () => {
+  editModal.classList.remove('show');
+  document.body.classList.remove('modal-open'); // ✅ destrava fundo
+});
+
+editModal.addEventListener('click', e => {
+  if(e.target === editModal){
+    editModal.classList.remove('show');
+    document.body.classList.remove('modal-open'); // ✅ destrava fundo
+  }
+});
+
+
 
 $('#cancelEditModal').addEventListener('click', () => editModal.classList.remove('show'));
 editModal.addEventListener('click', e => { if(e.target === editModal) editModal.classList.remove('show'); });
