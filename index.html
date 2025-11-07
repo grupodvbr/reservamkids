@@ -1360,12 +1360,14 @@ $('#saveEditBtn').addEventListener('click', async () => {
     datahora: $('#e_datahora').value
   };
   // ✅ Se o banco for "Crédito", mantém o valor antecipado original (não zera)
-  if (payload.banco.toLowerCase() === 'crédito' || payload.banco.toLowerCase() === 'credito') {
-    const reservaAntiga = state.reservas.find(r => r.id === id);
-    if (reservaAntiga && reservaAntiga.PagamentoAntecipado) {
-      payload.pagamentoAntecipado = String(parseBRL(reservaAntiga.PagamentoAntecipado));
-    }
+ // ✅ Se o banco for "Crédito", mantém o valor antecipado original (não zera)
+if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCase().includes('credito')) {
+  const reservaAntiga = state.reservas.find(r => String(r.id) === String(id));
+  if (reservaAntiga && reservaAntiga.pagamentoAntecipado != null) {
+    payload.pagamentoAntecipado = String(parseBRL(reservaAntiga.pagamentoAntecipado));
   }
+}
+
 
 
   const resp = await api.atualizar(id, payload);
