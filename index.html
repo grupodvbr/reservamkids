@@ -1032,7 +1032,7 @@ function renderResItem(r) {
       <div class="meta"><b>Obs:</b> ${r.observacoes || '—'}</div>
       <div class="meta">
         Estimado: ${formatBRL(parseBRL(r.valorEstimado || 0))} •
-        Adiantamento: ${formatBRL(parseBRL(r.pagamentoAntecipado || 0) + sumExtrasFromRecord(r))} •
+        Adiantamento: ${formatBRL(parseBRL(r.pagamentoAntecipado || 0) + sumPagamentos(r))} •
         Final pago: ${formatBRL(parseBRL(r.valorFinalPago || 0))}
       </div>
       ${pagamentos ? `<div class="meta">${pagamentos}</div>` : ''}
