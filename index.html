@@ -11,7 +11,7 @@
   --accent:#f472b6; --brand:#60a5fa; --radius:14px;
 }
 body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0;color:#333;}
-.wrap{max-width:1080px;margin:auto;padding:24px;}
+.wrap{max-width:1180px;margin:auto;padding:24px;}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .title{font-weight:900;color:var(--brand);font-size:1.4rem;}
 .badge{background:linear-gradient(90deg,var(--brand),var(--accent));color:#fff;padding:6px 10px;border-radius:20px;}
@@ -28,11 +28,9 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .t-done{background:#dbeafe;color:#1e3a8a;}
 .t-credit{background:#dcfce7;color:#166534;}
 .t-canc{background:#fee2e2;color:#991b1b;}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;z-index:50;}
 .modal.show{display:flex;}
-.sheet{background:#fff;width:95%;max-width:580px;max-height:90vh;border-radius:18px;overflow:auto;box-shadow:0 0 30px rgba(0,0,0,.25);}
-.sheet-head{padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:var(--brand);color:#fff;border-radius:18px 18px 0 0;}
-.sheet-body{padding:18px;}
+.sheet{background:#fff;width:100%;max-height:85vh;border-radius:18px 18px 0 0;overflow:auto;box-shadow:0 -10px 30px rgba(0,0,0,.25);}
 .res-item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
 .res-item .name{font-weight:700;}
 .res-item .name.pendente{color:var(--warn);}
@@ -43,13 +41,20 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .btn-edit{background:var(--brand);color:#fff;}
 .btn-del{background:var(--danger);color:#fff;}
 .btn-status{background:var(--accent);color:#fff;}
-.btn-primary{background:linear-gradient(90deg,var(--brand),var(--accent));color:#fff;}
 .row{display:flex;gap:6px;flex-wrap:wrap;}
 .hint{color:var(--muted);font-size:.85rem;}
 .toast{position:fixed;bottom:18px;right:18px;background:var(--brand);color:#fff;padding:12px 14px;border-radius:12px;display:none;}
 .toast.show{display:block;}
-label{font-weight:600;font-size:.9rem;}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;}
+
+/* ===== CARDS DE RESUMO (M.KIDS) ===== */
+.summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0;}
+.kpi-card{border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.06);color:#fff;}
+.kpi-card h4{margin:0 0 8px;font-size:1rem;font-weight:700;}
+.kpi-card .valor{font-size:1.6rem;font-weight:900;}
+.kpi-antecipado{background:linear-gradient(90deg,#60a5fa,#93c5fd);}
+.kpi-final{background:linear-gradient(90deg,#34d399,#059669);}
+.kpi-receber{background:linear-gradient(90deg,#fcd34d,#fbbf24);}
+.kpi-total{background:linear-gradient(90deg,#f472b6,#ec4899);}
 </style>
 </head>
 <body>
@@ -59,12 +64,12 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
   <div class="badge">Calendário & Gerenciamento</div>
 </header>
 
-<!-- ===== CALENDÁRIO ===== -->
+<!-- CALENDÁRIO -->
 <div class="card">
   <div class="card-head">
     <h2>Calendário de Reservas</h2>
     <div class="row">
-      <button id="novaReserva" class="btn btn-primary">+ Nova Reserva</button>
+      <button id="newBtn" class="btn" style="background:var(--accent);color:#fff;">+ Nova Reserva</button>
       <button id="prevMonth" class="btn">◀</button>
       <button id="todayBtn" class="btn">Hoje</button>
       <button id="nextMonth" class="btn">▶</button>
@@ -77,55 +82,51 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
   </div>
 </div>
 
-<!-- ===== MODAL DE DIA ===== -->
+<!-- CARDS DE RESUMO -->
+<div class="summary-cards">
+  <div class="kpi-card kpi-antecipado"><h4>💰 Antecipado</h4><div class="valor" id="kpiAntecipado">R$ 0,00</div></div>
+  <div class="kpi-card kpi-final"><h4>🧾 Final Pago</h4><div class="valor" id="kpiFinalPago">R$ 0,00</div></div>
+  <div class="kpi-card kpi-receber"><h4>🪙 A Receber</h4><div class="valor" id="kpiAReceber">R$ 0,00</div></div>
+  <div class="kpi-card kpi-total"><h4>🎯 Total do Mês</h4><div class="valor" id="kpiTotalMes">R$ 0,00</div></div>
+</div>
+
+<!-- MODAL DE LISTA -->
 <div class="modal" id="dayModal">
   <div class="sheet">
-    <div class="sheet-head">
-      <h3 id="modalTitle">Reservas do dia</h3>
-      <button onclick="$('#dayModal').classList.remove('show')" class="btn">✕</button>
-    </div>
-    <div id="modalList" class="sheet-body"></div>
+    <h3 id="modalTitle" style="padding:16px 16px 0 16px">Reservas do dia</h3>
+    <div id="modalList" style="padding:16px"></div>
   </div>
 </div>
 
-<!-- ===== MODAL DE CADASTRO ===== -->
-<div class="modal" id="formModal">
+<!-- MODAL DE NOVA RESERVA -->
+<div class="modal" id="newModal">
   <div class="sheet">
-    <div class="sheet-head">
-      <h3 id="formTitle">Nova Reserva</h3>
-      <button onclick="closeFormModal()" class="btn">✕</button>
-    </div>
-    <div class="sheet-body">
-      <form id="reservaForm">
-        <input type="hidden" id="reservaId" name="id">
-        <label>Nome</label><input id="nome" name="nome" required>
-        <label>Email</label><input id="email" name="email" type="email" required>
-        <label>Telefone</label><input id="telefone" name="telefone" required>
-        <label>Pessoas</label><input id="pessoas" name="pessoas" type="number" min="1" required>
-        <label>Local</label>
-        <select id="mesa" name="mesa" required>
+    <h3 style="padding:16px">✨ Nova Reserva</h3>
+    <form id="reservaForm" style="padding:16px">
+      <input type="hidden" name="acao" value="cadastrar">
+      <input type="hidden" name="status" value="Pendente">
+      <div class="row" style="flex-wrap:wrap;gap:10px">
+        <div style="flex:1 1 45%"><label>Nome</label><input name="nome" required></div>
+        <div style="flex:1 1 45%"><label>Email</label><input name="email" type="email" required></div>
+        <div style="flex:1 1 45%"><label>Telefone</label><input name="telefone" required></div>
+        <div style="flex:1 1 45%"><label>Pessoas</label><input name="pessoas" type="number" min="1" required></div>
+        <div style="flex:1 1 45%"><label>Local</label><select name="mesa" required>
           <option value="">Selecione</option>
-          <option>Sala de Festa</option>
-          <option>Parquinho</option>
-          <option>Piscina de Bolinhas</option>
-        </select>
-        <label>Cardápio</label>
-        <select id="cardapio" name="cardapio">
-          <option value="">Selecione</option>
-          <option>Buffet Kids</option>
-          <option>Pizza Infantil</option>
-          <option>Mini Lanches</option>
-        </select>
-        <label>Data e Hora</label><input id="datahora" name="datahora" type="datetime-local" required>
-        <label>Valor Estimado (R$)</label><input id="valorEstimado" name="valorEstimado" inputmode="decimal">
-        <label>Adiantamento (R$)</label><input id="pagamentoAntecipado" name="pagamentoAntecipado" inputmode="decimal">
-        <label>Observações</label><textarea id="observacoes" name="observacoes" rows="3"></textarea>
-        <div class="row" style="justify-content:flex-end;margin-top:10px">
-          <button type="button" class="btn" onclick="closeFormModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-      </form>
-    </div>
+          <option>Sala de Festa</option><option>Parquinho</option><option>Piscina</option>
+        </select></div>
+        <div style="flex:1 1 45%"><label>Cardápio</label><select name="cardapio">
+          <option value="">Selecione</option><option>Buffet Kids</option><option>Mini Lanches</option>
+        </select></div>
+        <div style="flex:1 1 45%"><label>Data e Hora</label><input type="datetime-local" name="datahora" required></div>
+        <div style="flex:1 1 45%"><label>Valor Estimado (R$)</label><input name="valorEstimado" inputmode="decimal"></div>
+        <div style="flex:1 1 45%"><label>Adiantamento (R$)</label><input name="pagamentoAntecipado" inputmode="decimal"></div>
+        <div style="flex:1 1 100%"><label>Observações</label><textarea name="observacoes" rows="2"></textarea></div>
+      </div>
+      <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
+        <button type="button" class="btn" id="closeNew">Cancelar</button>
+        <button type="submit" class="btn btn-edit">Salvar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -134,62 +135,73 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);borde
 
 <script>
 const endpoint = "https://script.google.com/macros/s/AKfycbxf8bB1gfZpal1-bN8v6hNO8gTr6fKxG2MyV_g3Rlhn-mJxF0sYuNHta_yT9zKmkd2Eww/exec";
-const $ = s => document.querySelector(s);
-const toast = msg => {const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);};
-const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-$("#calDow").innerHTML = dow.map(d=>`<div style='text-align:center;font-weight:700;color:#f472b6'>${d}</div>`).join("");
+const $ = s=>document.querySelector(s);
+const toast = msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);}
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+$("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:#f472b6'>${d}</div>`).join("");
 const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
 
-// ===== CARREGAR =====
 async function loadMonth(a,m){
   try{
     const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
     const data=await res.json();
     state.reservas=data.map(r=>({...r,status:r.status||r.Status||"Pendente",datahora:r.datahora||r.DataHora}));
   }catch{state.reservas=[];}
-  buildCalendar();
+  buildCalendar();updateSummary();
 }
 
-// ===== CALENDÁRIO =====
 function buildCalendar(){
   const {mes,ano}=state;
   $("#calTitle").textContent=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes]} de ${ano}`;
-  const grid=$("#calGrid"); grid.innerHTML="";
+  const grid=$("#calGrid");grid.innerHTML="";
   const first=new Date(ano,mes,1);
   const startDay=(first.getDay()+7)%7;
-  const start=new Date(first); start.setDate(1-startDay);
+  const start=new Date(first);start.setDate(1-startDay);
   for(let i=0;i<42;i++){
-    const d=new Date(start); d.setDate(start.getDate()+i);
+    const d=new Date(start);d.setDate(start.getDate()+i);
     const inMonth=d.getMonth()===mes;
     const cell=document.createElement("button");
     cell.className="cal-day"+(inMonth?"":" out");
-    const items=state.reservas.filter(r=>r.datahora && ymd(new Date(r.datahora))===ymd(d));
+    const items=state.reservas.filter(r=>r.datahora&&ymd(new Date(r.datahora))===ymd(d));
     const pend=items.filter(r=>r.status==="Pendente").length;
     const cred=items.filter(r=>r.status==="Crédito").length;
     const done=items.filter(r=>r.status==="Concluída").length;
     const canc=items.filter(r=>r.status==="Cancelada").length;
     cell.innerHTML=`<div class='num'>${d.getDate()}</div>
-      ${pend?`<div class='tag t-pend'>Pend: ${pend}</div>`:""}
-      ${cred?`<div class='tag t-credit'>Cred: ${cred}</div>`:""}
-      ${done?`<div class='tag t-done'>Conc: ${done}</div>`:""}
-      ${canc?`<div class='tag t-canc'>Canc: ${canc}</div>`:""}`;
+    ${pend?`<div class='tag t-pend'>Pend: ${pend}</div>`:""}
+    ${cred?`<div class='tag t-credit'>Cred: ${cred}</div>`:""}
+    ${done?`<div class='tag t-done'>Conc: ${done}</div>`:""}
+    ${canc?`<div class='tag t-canc'>Canc: ${canc}</div>`:""}`;
     cell.onclick=()=>openDayModal(d,items);
     grid.appendChild(cell);
   }
 }
 
-// ===== MODAL DIA =====
+function updateSummary(){
+  const mes=state.mes,ano=state.ano;
+  const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano});
+  const sum=(f)=>mesRes.reduce((a,b)=>a+parseFloat(b[f]||0),0);
+  const antecipado=sum("pagamentoAntecipado");
+  const finalPago=sum("valorFinalPago");
+  const estimado=sum("valorEstimado");
+  const aReceber=Math.max(estimado-(antecipado+finalPago),0);
+  $("#kpiAntecipado").textContent=`R$ ${antecipado.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiFinalPago").textContent=`R$ ${finalPago.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiAReceber").textContent=`R$ ${aReceber.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiTotalMes").textContent=`R$ ${(antecipado+finalPago).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+}
+
 function openDayModal(date,items){
   $("#modalTitle").textContent=`Reservas de ${date.toLocaleDateString("pt-BR")}`;
   const list=$("#modalList");
   if(!items.length){list.innerHTML="<div class='hint'>Nenhuma reserva neste dia.</div>";return;}
   list.innerHTML=items.map(r=>{
     const st=r.status.toLowerCase();
-    const corClass=st==="crédito"?"credito":st;
-    const creditoTxt=(st==="crédito" && r.pagamentoAntecipado)?`<div class='hint' style='color:var(--ok)'>Crédito: R$ ${r.pagamentoAntecipado}</div>`:"";
+    const cor=st==="crédito"?"credito":st;
+    const creditoTxt=(st==="crédito"&&r.pagamentoAntecipado)?`<div class='hint' style='color:var(--ok)'>Crédito: R$ ${r.pagamentoAntecipado}</div>`:"";
     return `<div class='res-item'>
-      <div class='name ${corClass}'>${r.nome||"—"}</div>
+      <div class='name ${cor}'>${r.nome||"—"}</div>
       <div class='hint'>${r.email||""} • ${r.telefone||""}</div>
       <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas • ${r.cardapio||""}</div>
       <div class='hint'>Data/Hora: ${new Date(r.datahora).toLocaleString("pt-BR")}</div>
@@ -200,65 +212,39 @@ function openDayModal(date,items){
         <button class='btn btn-del' onclick='excluirReserva("${r.id}")'>Excluir</button>
         <button class='btn btn-status' onclick='mudarStatus("${r.id}","${r.status}")'>Status</button>
       </div>
-    </div>`;
-  }).join("");
+    </div>`;}).join("");
   $("#dayModal").classList.add("show");
 }
 $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
 
-// ===== FORMULARIO =====
-$("#novaReserva").onclick=()=>{$("#formTitle").textContent="Nova Reserva";$("#reservaForm").reset();$("#reservaId").value="";$("#formModal").classList.add("show");};
-function closeFormModal(){$("#formModal").classList.remove("show");}
-function editarReserva(id){
-  const r=state.reservas.find(x=>x.id===id);
-  if(!r)return;
-  $("#formTitle").textContent="Editar Reserva";
-  $("#reservaId").value=r.id;
-  $("#nome").value=r.nome||"";
-  $("#email").value=r.email||"";
-  $("#telefone").value=r.telefone||"";
-  $("#pessoas").value=r.pessoas||"";
-  $("#mesa").value=r.mesa||"";
-  $("#cardapio").value=r.cardapio||"";
-  $("#datahora").value=r.datahora?new Date(r.datahora).toISOString().slice(0,16):"";
-  $("#valorEstimado").value=r.valorEstimado||"";
-  $("#pagamentoAntecipado").value=r.pagamentoAntecipado||"";
-  $("#observacoes").value=r.observacoes||"";
-  $("#formModal").classList.add("show");
-  $("#dayModal").classList.remove("show");
-}
-
-$("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  const obj=Object.fromEntries(fd.entries());
-  const acao=obj.id?"atualizar":"cadastrar";
-  const res=await fetch(`${endpoint}?acao=${acao}`,{method:"POST",body:new URLSearchParams(obj)});
-  toast(obj.id?"✅ Reserva atualizada!":"✅ Reserva cadastrada!");
-  closeFormModal();
-  loadMonth(state.ano,state.mes);
-};
-
-// ===== AÇÕES =====
+// CRUD
 async function excluirReserva(id){
   if(!confirm("Excluir esta reserva?"))return;
   await fetch(`${endpoint}?acao=excluir&id=${id}`);
-  toast("🗑️ Reserva excluída!");
-  loadMonth(state.ano,state.mes);
+  toast("🗑️ Reserva excluída!");loadMonth(state.ano,state.mes);
 }
 async function mudarStatus(id,statusAtual){
   const novo=prompt("Novo status (Pendente / Crédito / Concluída / Cancelada):",statusAtual);
   if(!novo)return;
   await fetch(`${endpoint}?acao=status&id=${id}&status=${encodeURIComponent(novo)}`);
-  toast("🔄 Status atualizado!");
-  loadMonth(state.ano,state.mes);
+  toast("🔄 Status atualizado!");loadMonth(state.ano,state.mes);
+}
+function editarReserva(id){
+  toast("✏️ Função de edição pode ser adicionada ao modal de nova reserva.");
 }
 
-// ===== NAVEGAÇÃO =====
-$("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
-$("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
-$("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);};
+// MODAL NOVA RESERVA
+$("#newBtn").onclick=()=>$("#newModal").classList.add("show");
+$("#closeNew").onclick=()=>$("#newModal").classList.remove("show");
 
+$("#reservaForm").onsubmit=async e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const res=await fetch(endpoint,{method:"POST",body:new URLSearchParams(fd)});
+  if...res.ok){toast("✅ Reserva salva!");$("#newModal").classList.remove("show");e.target.reset();loadMonth(state.ano,state.mes);}else{toast("❌ Erro ao salvar!");}}
+$("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
+$("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
+$("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
 loadMonth(state.ano,state.mes);
 </script>
 </body>
