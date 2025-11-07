@@ -2,65 +2,59 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<title>Painel de Reservas • M.Kids</title>
+<title>🎈 Painel de Reservas • M.Kids</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-:root{
-  --ok:#22c55e; --warn:#facc15; --danger:#f87171; --info:#3b82f6;
-  --bg:#fffafc; --card:#fff; --line:#eee; --muted:#666;
-  --accent:#f472b6; --brand:#60a5fa; --radius:14px;
+:root {
+  --rosa:#f472b6; --azul:#60a5fa; --verde:#34d399; --amarelo:#facc15;
+  --bg:#fff7fb; --card:#fff; --muted:#666; --line:#eee; --radius:14px;
 }
-body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0;color:#333;}
+body {font-family:'Poppins',sans-serif;background:var(--bg);margin:0;color:#333;}
 .wrap{max-width:1180px;margin:auto;padding:24px;}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.title{font-weight:900;color:var(--brand);font-size:1.4rem;}
-.badge{background:linear-gradient(90deg,var(--brand),var(--accent));color:#fff;padding:6px 10px;border-radius:20px;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:20px;}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.title{font-weight:900;color:var(--rosa);font-size:1.6rem;}
+.badge{background:linear-gradient(90deg,var(--azul),var(--rosa));color:#fff;padding:6px 12px;border-radius:20px;}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.06);margin-bottom:20px;}
 .card-head{padding:14px 18px;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center;}
-.card-head h2{margin:0;font-size:1rem;color:var(--accent);}
+.card-head h2{margin:0;font-size:1rem;color:var(--rosa);}
 .cal{padding:16px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.cal-day{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:95px;text-align:left;cursor:pointer;transition:.12s;}
+.cal-day{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:95px;cursor:pointer;transition:.1s;}
 .cal-day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.1);}
-.num{font-weight:700;font-size:.95rem;}
-.tag{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:10px;margin-top:4px;}
+.num{font-weight:700;font-size:.9rem;}
+.tag{display:inline-block;font-size:.75rem;padding:3px 6px;border-radius:10px;margin-top:4px;}
 .t-pend{background:#fef9c3;color:#92400e;}
 .t-done{background:#dbeafe;color:#1e3a8a;}
-.t-credit{background:#dcfce7;color:#166534;}
-.t-canc{background:#fee2e2;color:#991b1b;}
+.t-receber{background:#fde68a;color:#78350f;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;z-index:50;}
 .modal.show{display:flex;}
 .sheet{background:#fff;width:100%;max-height:85vh;border-radius:18px 18px 0 0;overflow:auto;box-shadow:0 -10px 30px rgba(0,0,0,.25);}
 .res-item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
-.res-item .name{font-weight:700;}
-.res-item .name.pendente{color:var(--warn);}
-.res-item .name.credito{color:var(--ok);}
-.res-item .name.concluida{color:var(--info);}
-.res-item .name.cancelada{color:var(--danger);}
 .btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
-.btn-edit{background:var(--brand);color:#fff;}
-.btn-del{background:var(--danger);color:#fff;}
-.btn-status{background:var(--accent);color:#fff;}
+.btn-pink{background:var(--rosa);color:#fff;}
+.btn-blue{background:var(--azul);color:#fff;}
+.btn-green{background:var(--verde);color:#fff;}
+.btn-yellow{background:var(--amarelo);color:#fff;}
+.btn-del{background:#f87171;color:#fff;}
 .row{display:flex;gap:6px;flex-wrap:wrap;}
 .hint{color:var(--muted);font-size:.85rem;}
-.toast{position:fixed;bottom:18px;right:18px;background:var(--brand);color:#fff;padding:12px 14px;border-radius:12px;display:none;}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--azul);color:#fff;padding:12px 14px;border-radius:12px;display:none;}
 .toast.show{display:block;}
-
-/* ===== CARDS DE RESUMO (M.KIDS) ===== */
 .summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0;}
-.kpi-card{border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.06);color:#fff;}
-.kpi-card h4{margin:0 0 8px;font-size:1rem;font-weight:700;}
+.kpi-card{border-radius:16px;padding:16px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.1);}
+.kpi-card h4{margin:0 0 6px;font-size:1rem;font-weight:700;}
 .kpi-card .valor{font-size:1.6rem;font-weight:900;}
-.kpi-antecipado{background:linear-gradient(90deg,#60a5fa,#93c5fd);}
-.kpi-final{background:linear-gradient(90deg,#34d399,#059669);}
+.kpi-antecipado{background:linear-gradient(90deg,#60a5fa,#3b82f6);}
+.kpi-final{background:linear-gradient(90deg,#34d399,#10b981);}
 .kpi-receber{background:linear-gradient(90deg,#fcd34d,#fbbf24);}
 .kpi-total{background:linear-gradient(90deg,#f472b6,#ec4899);}
+input, select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <div class="title">🎈 Reservas • M.Kids</div>
+  <div class="title">📍 Reservas • M.Kids</div>
   <div class="badge">Calendário & Gerenciamento</div>
 </header>
 
@@ -69,10 +63,10 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
   <div class="card-head">
     <h2>Calendário de Reservas</h2>
     <div class="row">
-      <button id="newBtn" class="btn" style="background:var(--accent);color:#fff;">+ Nova Reserva</button>
-      <button id="prevMonth" class="btn">◀</button>
-      <button id="todayBtn" class="btn">Hoje</button>
-      <button id="nextMonth" class="btn">▶</button>
+      <button id="newBtn" class="btn btn-pink">+ Nova Reserva</button>
+      <button id="prevMonth" class="btn btn-blue">◀</button>
+      <button id="todayBtn" class="btn btn-yellow">Hoje</button>
+      <button id="nextMonth" class="btn btn-blue">▶</button>
     </div>
   </div>
   <div class="cal">
@@ -82,7 +76,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
   </div>
 </div>
 
-<!-- CARDS DE RESUMO -->
+<!-- CARDS RESUMO -->
 <div class="summary-cards">
   <div class="kpi-card kpi-antecipado"><h4>💰 Antecipado</h4><div class="valor" id="kpiAntecipado">R$ 0,00</div></div>
   <div class="kpi-card kpi-final"><h4>🧾 Final Pago</h4><div class="valor" id="kpiFinalPago">R$ 0,00</div></div>
@@ -90,7 +84,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
   <div class="kpi-card kpi-total"><h4>🎯 Total do Mês</h4><div class="valor" id="kpiTotalMes">R$ 0,00</div></div>
 </div>
 
-<!-- MODAL DE LISTA -->
+<!-- MODAL DO DIA -->
 <div class="modal" id="dayModal">
   <div class="sheet">
     <h3 id="modalTitle" style="padding:16px 16px 0 16px">Reservas do dia</h3>
@@ -98,35 +92,16 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
   </div>
 </div>
 
-<!-- MODAL DE NOVA RESERVA -->
-<div class="modal" id="newModal">
-  <div class="sheet">
-    <h3 style="padding:16px">✨ Nova Reserva</h3>
-    <form id="reservaForm" style="padding:16px">
-      <input type="hidden" name="acao" value="cadastrar">
-      <input type="hidden" name="status" value="Pendente">
-      <div class="row" style="flex-wrap:wrap;gap:10px">
-        <div style="flex:1 1 45%"><label>Nome</label><input name="nome" required></div>
-        <div style="flex:1 1 45%"><label>Email</label><input name="email" type="email" required></div>
-        <div style="flex:1 1 45%"><label>Telefone</label><input name="telefone" required></div>
-        <div style="flex:1 1 45%"><label>Pessoas</label><input name="pessoas" type="number" min="1" required></div>
-        <div style="flex:1 1 45%"><label>Local</label><select name="mesa" required>
-          <option value="">Selecione</option>
-          <option>Sala de Festa</option><option>Parquinho</option><option>Piscina</option>
-        </select></div>
-        <div style="flex:1 1 45%"><label>Cardápio</label><select name="cardapio">
-          <option value="">Selecione</option><option>Buffet Kids</option><option>Mini Lanches</option>
-        </select></div>
-        <div style="flex:1 1 45%"><label>Data e Hora</label><input type="datetime-local" name="datahora" required></div>
-        <div style="flex:1 1 45%"><label>Valor Estimado (R$)</label><input name="valorEstimado" inputmode="decimal"></div>
-        <div style="flex:1 1 45%"><label>Adiantamento (R$)</label><input name="pagamentoAntecipado" inputmode="decimal"></div>
-        <div style="flex:1 1 100%"><label>Observações</label><textarea name="observacoes" rows="2"></textarea></div>
-      </div>
-      <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
-        <button type="button" class="btn" id="closeNew">Cancelar</button>
-        <button type="submit" class="btn btn-edit">Salvar</button>
-      </div>
-    </form>
+<!-- MODAL FINALIZAR -->
+<div class="modal" id="finishModal">
+  <div class="sheet" style="max-width:420px;margin:auto;padding:20px;">
+    <h3>Finalizar Reserva</h3>
+    <p class="hint">Informe o valor final pago (soma automática se houver diferença a receber)</p>
+    <input id="valorFinalInput" placeholder="Ex: 150,00" inputmode="decimal" />
+    <div class="row" style="margin-top:14px;justify-content:flex-end;">
+      <button class="btn btn-del" id="cancelFinish">Cancelar</button>
+      <button class="btn btn-green" id="confirmFinish">Confirmar</button>
+    </div>
   </div>
 </div>
 
@@ -137,16 +112,30 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 const endpoint = "https://script.google.com/macros/s/AKfycbxf8bB1gfZpal1-bN8v6hNO8gTr6fKxG2MyV_g3Rlhn-mJxF0sYuNHta_yT9zKmkd2Eww/exec";
 const $ = s=>document.querySelector(s);
 const toast = msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);}
-const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-$("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:#f472b6'>${d}</div>`).join("");
-const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[]};
+$("#calDow").innerHTML=dow.map(d=>`<div style='text-align:center;font-weight:700;color:var(--rosa)'>${d}</div>`).join("");
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const state={mes:(new Date()).getMonth(),ano:(new Date()).getFullYear(),reservas:[],finishId:null};
 
 async function loadMonth(a,m){
   try{
     const res=await fetch(`${endpoint}?acao=listar&ano=${a}&mes=${m+1}`);
     const data=await res.json();
-    state.reservas=data.map(r=>({...r,status:r.status||r.Status||"Pendente",datahora:r.datahora||r.DataHora}));
+    state.reservas=data.map(r=>({
+      id:r.id||r.ID||'',
+      nome:r.nome||r.Nome||'',
+      email:r.email||'',
+      telefone:r.telefone||'',
+      pessoas:r.pessoas||'',
+      mesa:r.mesa||'',
+      cardapio:r.cardapio||'',
+      observacoes:r.observacoes||'',
+      datahora:r.datahora||r.DataHora||'',
+      valorEstimado:parseFloat(r.valorEstimado||0),
+      pagamentoAntecipado:parseFloat(r.pagamentoAntecipado||0),
+      valorFinalPago:parseFloat(r.valorFinalPago||0),
+      status:r.status||'Pendente'
+    }));
   }catch{state.reservas=[];}
   buildCalendar();updateSummary();
 }
@@ -161,18 +150,11 @@ function buildCalendar(){
   for(let i=0;i<42;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);
     const inMonth=d.getMonth()===mes;
-    const cell=document.createElement("button");
+    const cell=document.createElement("div");
     cell.className="cal-day"+(inMonth?"":" out");
     const items=state.reservas.filter(r=>r.datahora&&ymd(new Date(r.datahora))===ymd(d));
-    const pend=items.filter(r=>r.status==="Pendente").length;
-    const cred=items.filter(r=>r.status==="Crédito").length;
-    const done=items.filter(r=>r.status==="Concluída").length;
-    const canc=items.filter(r=>r.status==="Cancelada").length;
-    cell.innerHTML=`<div class='num'>${d.getDate()}</div>
-    ${pend?`<div class='tag t-pend'>Pend: ${pend}</div>`:""}
-    ${cred?`<div class='tag t-credit'>Cred: ${cred}</div>`:""}
-    ${done?`<div class='tag t-done'>Conc: ${done}</div>`:""}
-    ${canc?`<div class='tag t-canc'>Canc: ${canc}</div>`:""}`;
+    const nome=items[0]?items[0].nome.split(" ")[0]:"";
+    cell.innerHTML=`<div class='num'>${d.getDate()}</div>${nome?`<div class='tag t-done'>${nome}</div>`:""}`;
     cell.onclick=()=>openDayModal(d,items);
     grid.appendChild(cell);
   }
@@ -181,67 +163,61 @@ function buildCalendar(){
 function updateSummary(){
   const mes=state.mes,ano=state.ano;
   const mesRes=state.reservas.filter(r=>{const d=new Date(r.datahora);return d.getMonth()===mes&&d.getFullYear()===ano});
-  const sum=(f)=>mesRes.reduce((a,b)=>a+parseFloat(b[f]||0),0);
-  const antecipado=sum("pagamentoAntecipado");
-  const finalPago=sum("valorFinalPago");
-  const estimado=sum("valorEstimado");
-  const aReceber=Math.max(estimado-(antecipado+finalPago),0);
-  $("#kpiAntecipado").textContent=`R$ ${antecipado.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiFinalPago").textContent=`R$ ${finalPago.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiAReceber").textContent=`R$ ${aReceber.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-  $("#kpiTotalMes").textContent=`R$ ${(antecipado+finalPago).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const ad=mesRes.reduce((a,b)=>a+(b.pagamentoAntecipado||0),0);
+  const fin=mesRes.reduce((a,b)=>a+(b.valorFinalPago||0),0);
+  const est=mesRes.reduce((a,b)=>a+(b.valorEstimado||0),0);
+  const rec=Math.max(est-(ad+fin),0);
+  $("#kpiAntecipado").textContent=`R$ ${ad.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiFinalPago").textContent=`R$ ${fin.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiAReceber").textContent=`R$ ${rec.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  $("#kpiTotalMes").textContent=`R$ ${(ad+fin).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
 }
 
 function openDayModal(date,items){
   $("#modalTitle").textContent=`Reservas de ${date.toLocaleDateString("pt-BR")}`;
   const list=$("#modalList");
-  if(!items.length){list.innerHTML="<div class='hint'>Nenhuma reserva neste dia.</div>";return;}
+  if(!items.length){list.innerHTML="<div class='hint'>Nenhuma reserva.</div>";return;}
   list.innerHTML=items.map(r=>{
-    const st=r.status.toLowerCase();
-    const cor=st==="crédito"?"credito":st;
-    const creditoTxt=(st==="crédito"&&r.pagamentoAntecipado)?`<div class='hint' style='color:var(--ok)'>Crédito: R$ ${r.pagamentoAntecipado}</div>`:"";
+    const aReceber=Math.max(r.valorEstimado-(r.pagamentoAntecipado+r.valorFinalPago),0);
     return `<div class='res-item'>
-      <div class='name ${cor}'>${r.nome||"—"}</div>
-      <div class='hint'>${r.email||""} • ${r.telefone||""}</div>
-      <div class='hint'>${r.mesa||""} • ${r.pessoas||0} pessoas • ${r.cardapio||""}</div>
-      <div class='hint'>Data/Hora: ${new Date(r.datahora).toLocaleString("pt-BR")}</div>
-      <div class='hint'>Estimado: R$ ${r.valorEstimado||"0"} ${creditoTxt}</div>
-      <div class='hint'>Obs: ${r.observacoes||"—"}</div>
-      <div class='row' style='margin-top:8px'>
-        <button class='btn btn-edit' onclick='editarReserva("${r.id}")'>Editar</button>
+      <div><b>${r.nome}</b> (${r.mesa||'-'})</div>
+      <div class='hint'>📅 ${new Date(r.datahora).toLocaleString('pt-BR')}</div>
+      <div class='hint'>💰 Antecipado: R$ ${r.pagamentoAntecipado.toFixed(2)}</div>
+      <div class='hint'>🧾 Final Pago: R$ ${r.valorFinalPago.toFixed(2)}</div>
+      <div class='hint'>🪙 A Receber: R$ ${aReceber.toFixed(2)}</div>
+      <div class='row' style='margin-top:8px;justify-content:flex-end'>
+        <button class='btn btn-green' onclick='abrirFinalizar("${r.id}")'>Finalizar</button>
         <button class='btn btn-del' onclick='excluirReserva("${r.id}")'>Excluir</button>
-        <button class='btn btn-status' onclick='mudarStatus("${r.id}","${r.status}")'>Status</button>
       </div>
-    </div>`;}).join("");
+    </div>`}).join("");
   $("#dayModal").classList.add("show");
 }
 $("#dayModal").onclick=e=>{if(e.target.id==="dayModal")e.target.classList.remove("show");};
 
-// CRUD
+function abrirFinalizar(id){state.finishId=id;$("#finishModal").classList.add("show");}
+$("#cancelFinish").onclick=()=>$("#finishModal").classList.remove("show");
+
+$("#confirmFinish").onclick=async()=>{
+  const val=parseFloat($("#valorFinalInput").value.replace(',','.'))||0;
+  if(val<=0){toast("Informe valor válido.");return;}
+  const r=state.reservas.find(x=>x.id===state.finishId);
+  if(!r)return;
+  const aReceber=Math.max(r.valorEstimado-(r.pagamentoAntecipado+r.valorFinalPago),0);
+  const dif=val-aReceber;
+  const novoFinal=r.valorFinalPago+val;
+  const novoEstimado=r.valorEstimado+(dif>0?dif:0);
+  await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"concluir",id:r.id,valorFinalPago:novoFinal,valorEstimado:novoEstimado,status:"Concluída"})});
+  toast("✅ Reserva finalizada!");
+  $("#finishModal").classList.remove("show");
+  loadMonth(state.ano,state.mes);
+}
+
 async function excluirReserva(id){
   if(!confirm("Excluir esta reserva?"))return;
-  await fetch(`${endpoint}?acao=excluir&id=${id}`);
+  await fetch(endpoint,{method:"POST",body:new URLSearchParams({acao:"excluir",id})});
   toast("🗑️ Reserva excluída!");loadMonth(state.ano,state.mes);
 }
-async function mudarStatus(id,statusAtual){
-  const novo=prompt("Novo status (Pendente / Crédito / Concluída / Cancelada):",statusAtual);
-  if(!novo)return;
-  await fetch(`${endpoint}?acao=status&id=${id}&status=${encodeURIComponent(novo)}`);
-  toast("🔄 Status atualizado!");loadMonth(state.ano,state.mes);
-}
-function editarReserva(id){
-  toast("✏️ Função de edição pode ser adicionada ao modal de nova reserva.");
-}
 
-// MODAL NOVA RESERVA
-$("#newBtn").onclick=()=>$("#newModal").classList.add("show");
-$("#closeNew").onclick=()=>$("#newModal").classList.remove("show");
-
-$("#reservaForm").onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  const res=await fetch(endpoint,{method:"POST",body:new URLSearchParams(fd)});
-  if...res.ok){toast("✅ Reserva salva!");$("#newModal").classList.remove("show");e.target.reset();loadMonth(state.ano,state.mes);}else{toast("❌ Erro ao salvar!");}}
 $("#prevMonth").onclick=()=>{const d=new Date(state.ano,state.mes-1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
 $("#nextMonth").onclick=()=>{const d=new Date(state.ano,state.mes+1);state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
 $("#todayBtn").onclick=()=>{const d=new Date();state.mes=d.getMonth();state.ano=d.getFullYear();loadMonth(state.ano,state.mes);}
