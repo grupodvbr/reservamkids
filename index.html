@@ -605,19 +605,10 @@ body.modal-open {
           </div>
         </div>
 
-        <label>Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
-<div class="inline-grid">
-  <div>
-    <label for="dataInicio">De:</label>
-    <input type="datetime-local" id="dataInicio" name="dataInicio" required />
-  </div>
-  <div>
-    <label for="dataFim">Até:</label>
-    <input type="datetime-local" id="dataFim" name="dataFim" required />
-  </div>
-</div>
-<div class="hint">Selecione o período da reserva (não pode ser no passado).</div>
-
+        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+        <input type="datetime-local" id="datahora" name="datahora" required />
+        <div class="hint">Não é permitido escolher data passada.</div>
+      </div>
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -1119,13 +1110,8 @@ function updateSummary() {
     dayModal.addEventListener('click', (e)=>{ if(e.target===dayModal) dayModal.classList.remove('show'); });
 
 function renderResItem(r) {
-  // mostra o período corretamente
-  const periodo = (r.datahora || '').includes('até')
-    ? r.datahora.replace('T', ' ').replace('até', 'até')
-    : new Date(r.datahora).toLocaleString('pt-BR');
-
+  const hora = new Date(r.datahora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const status = r.status || 'Pendente';
-
 
   const hasFile = r.arquivoURL || r.ArquivoURL || r.arquivourl || '';
   const fileLink = hasFile
@@ -1152,7 +1138,7 @@ function renderResItem(r) {
       <div class="top">
         <div>
           <div class="name">${r.nome || '—'}</div>
-          <div class="meta"><b>Período:</b> ${periodo} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)</div>
+          <div class="meta">${hora} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)</div>
         </div>
         <div class="row" style="margin-left:auto; flex-wrap:wrap; justify-content:flex-end">
           <span class="chip">${status}</span>
@@ -1203,11 +1189,7 @@ function renderResItem(r) {
     const fileBox = $('#fileBox');
     const fileName = $('#fileName');
     const clearFile = $('#clearFile');
-    const inputDataInicio = $('#dataInicio');
-const inputDataFim = $('#dataFim');
-inputDataInicio.min = nowLocalMin();
-inputDataFim.min = nowLocalMin();
-
+    const inputData = $('#datahora');
 
     inputData.min = nowLocalMin();
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
@@ -1231,22 +1213,11 @@ inputDataFim.min = nowLocalMin();
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
     function validateExtra(){
-  const inicio = new Date(inputDataInicio.value);
-  const fim = new Date(inputDataFim.value);
-  const agora = new Date();
-
-  if (inicio < agora) { toast('A data inicial não pode ser no passado.'); inputDataInicio.focus(); return false; }
-  if (fim <= inicio) { toast('A data final deve ser após a data inicial.'); inputDataFim.focus(); return false; }
-
-  const telDigits = inputTelefone.value.replace(/\D/g,'');
-  if (telDigits.length < 10) { toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
-
-  if (parseBRL(inputSinal.value) > 0 && !selectBanco.value) {
-    toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false;
-  }
-  return true;
-}
-
+      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
+      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
+      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
+      return true;
+    }
 
     form.addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -1298,18 +1269,12 @@ inputDataFim.min = nowLocalMin();
 
 
     function collectPayload(){
-  const fd = new FormData(form);
-  const obj = Object.fromEntries(fd.entries());
-  obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
-  obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
-
-  // adiciona período
-  obj.dataInicio = inputDataInicio.value;
-  obj.dataFim = inputDataFim.value;
-  obj.datahora = `${inputDataInicio.value} até ${inputDataFim.value}`;
-  return obj;
-}
-
+      const fd = new FormData(form);
+      const obj = Object.fromEntries(fd.entries());
+      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
+      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
+      return obj;
+    }
 
     /* ==============================
        Ações: Editar / Concluir / Excluir
@@ -1574,11 +1539,16 @@ if (payload.banco.toLowerCase().includes('crédito') || payload.banco.toLowerCas
   }
 });
 
-window.addEventListener('DOMContentLoaded', ()=>{
-  inputDataInicio.min = nowLocalMin();
-  inputDataFim.min = nowLocalMin();
-  refreshAll();
-});
+
+
+
+   
+
+    // Inicialização
+    window.addEventListener('DOMContentLoaded', ()=>{
+      $('#datahora').min = nowLocalMin();
+      refreshAll();
+    });
 
 
 // ========== VISUALIZAR / BAIXAR OBSERVAÇÃO ==========
@@ -1688,16 +1658,12 @@ function gerarPDFReserva(r) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.setTextColor(60, 60, 60);
-     const periodo = (r.datahora || '').includes('até')
-    ? r.datahora.replace('T', ' ').replace('até', 'até')
-    : new Date(r.datahora).toLocaleString('pt-BR');
-
 
   const detalhes = [
     `Nome: ${r.nome || ''}`,
     `E-mail: ${r.email || ''}`,
     `Telefone: ${r.telefone || ''}`,
-    `Período: ${periodo}`,
+    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
     `Local: ${r.mesa || ''}`,
     `Pessoas: ${r.pessoas || ''}`,
     `Cardápio: ${r.cardapio || ''}`,
