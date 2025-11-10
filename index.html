@@ -1648,49 +1648,70 @@ document.addEventListener('click', async (e) => {
 });
 function gerarPDFReserva(r) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  doc.setFont('helvetica', 'bold');
+  // 🎀 Cabeçalho
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(255, 79, 161);
-  doc.text('Resumo da Reserva • M.KIDS', 105, 20, { align: 'center' });
+  doc.text("Resumo da Reserva • M.KIDS", 105, 20, { align: "center" });
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
+  doc.setDrawColor(255, 182, 193);
+  doc.line(20, 26, 190, 26);
+
+  // 🎉 Corpo
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(13);
   doc.setTextColor(60, 60, 60);
 
+  const dataFmt = r.datahora
+    ? new Date(r.datahora).toLocaleString("pt-BR")
+    : "—";
+
   const detalhes = [
-    `Nome: ${r.nome || ''}`,
-    `E-mail: ${r.email || ''}`,
-    `Telefone: ${r.telefone || ''}`,
-    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
-    `Local: ${r.mesa || ''}`,
-    `Pessoas: ${r.pessoas || ''}`,
-    `Cardápio: ${r.cardapio || ''}`,
-    '',
-    'Observações:',
-    (r.observacoes || 'Sem observações.'),
-    '',
-    `Valor Estimado: ${formatBRL(r.valorEstimado)}`,
-    `Adiantamento: ${formatBRL(r.pagamentoAntecipado)}`,
-    `Valor Final Pago: ${formatBRL(r.valorFinalPago)}`,
-    `Status: ${r.status || ''}`
+    `👤 Nome: ${r.nome || "—"}`,
+    `📧 E-mail: ${r.email || "—"}`,
+    `📱 Telefone: ${r.telefone || "—"}`,
+    "",
+    `📅 Data: ${dataFmt}`,
+    `📍 Local: ${r.mesa || "—"}`,
+    `👨‍👩‍👧‍👦 Pessoas: ${r.pessoas || "—"}`,
+    `🍽️ Cardápio: ${r.cardapio || "—"}`,
+    "",
+    "📝 Observações:",
+    (r.observacoes || "Sem observações.").replace(/\r?\n/g, "\n"),
+    "",
+    "💰 Valores:",
+    `• Valor Estimado: ${formatBRL(r.valorEstimado)}`,
+    `• Adiantamento: ${formatBRL(r.pagamentoAntecipado)}`,
+    `• Valor Final Pago: ${formatBRL(r.valorFinalPago)}`,
+    "",
+    `📊 Status: ${r.status || "—"}`
   ];
 
-  let y = 35;
+  let y = 40;
   detalhes.forEach(linha => {
-    const linhas = doc.splitTextToSize(linha, 170);
-    doc.text(linhas, 20, y);
-    y += (linhas.length * 6);
+    const partes = doc.splitTextToSize(linha, 170);
+    doc.text(partes, 20, y);
+    y += partes.length * 7;
   });
 
+  // ✨ Rodapé
   doc.setFontSize(10);
   doc.setTextColor(138, 79, 255);
-  doc.text('Gerado automaticamente pelo Painel de Reservas M.KIDS', 105, 280, { align: 'center' });
+  doc.text(
+    "Gerado automaticamente pelo Painel de Reservas M.KIDS",
+    105,
+    280,
+    { align: "center" }
+  );
 
-  doc.save(`Reserva_${r.nome || 'Cliente'}.pdf`);
-  toast('📄 PDF da reserva baixado!');
+  // 💾 Nome do arquivo limpo
+  const nomeArquivo = (r.nome || "Reserva").replace(/[^\w\s]/g, "_");
+  doc.save(`Reserva_${nomeArquivo}.pdf`);
+  toast("📄 PDF da reserva baixado!");
 }
+
 
 
 </script>
