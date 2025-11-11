@@ -585,32 +585,30 @@ body.modal-open {
             </select>
           </div>
           <div>
-            <label for="cardapio">Pacote</label>
+            <label for="cardapio">Cardápio</label>
             <select id="cardapio" name="cardapio">
               <option value="">Selecione</option>
-              <option>Pacote Prata</option>
-              <option>Pacote Bronze</option>
-              <option>Pacote Ouro</option>
+              <option>Buffet Ouro</option>
+              <option>Buffet Diamante</option>
+              <option>Buffet Master Gold</option>
+              <option>Rodízio Pizza</option>
+              <option>Rodízio Happy Hour</option>
+              <option>À la carte</option>
+              <option>Cardápio Verde</option>
+              <option>Cardápio Azul</option>
+              <option>Cardápio Vermelho</option>
+              <option>Cardápio Rubi</option>
+              <option>Cardápio Diamente</option>
+              <option>Cardápio safira</option>
               <option>Outro</option>
             </select>
           </div>
         </div>
 
-       <label for="data">Data da Reserva <span style="color:var(--danger)">*</span></label>
-<input type="date" id="data" name="data" required />
-
-<div class="inline-3" style="margin-top:8px">
-  <div>
-    <label for="horaDe">Horário de</label>
-    <input type="time" id="horaDe" name="horaDe" required />
-  </div>
-  <div>
-    <label for="horaAte">Horário até</label>
-    <input type="time" id="horaAte" name="horaAte" required />
-  </div>
-</div>
-<div class="hint">Informe o período completo da reserva.</div>
-
+        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+        <input type="datetime-local" id="datahora" name="datahora" required />
+        <div class="hint">Não é permitido escolher data passada.</div>
+      </div>
 
       <div class="section">
         <h3>💳 Pagamento / Sinal</h3>
@@ -884,7 +882,7 @@ body.modal-open {
     /* ==============================
        Config
     ============================== */
-    const endpoint = "https://script.google.com/macros/s/AKfycbwZgHOmoFb2f7-vnOl8sgtLVMHwmLpjGgyzWuSGWhj_P73G9M3JortQOYnzU8z3KzNt2A/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbw04o3oA1h8kAnsOijslgDMCs8VjcEUlSoDBcrGareTpa1DeEMAf2XoSWclrrQWxWGH6Q/exec";
 
     /* ==============================
        Helpers
@@ -1112,9 +1110,6 @@ function updateSummary() {
     dayModal.addEventListener('click', (e)=>{ if(e.target===dayModal) dayModal.classList.remove('show'); });
 
 function renderResItem(r) {
-  const periodo = (r.datahora || '').includes('até')
-  ? r.datahora.replace('T', ' ').replace('até', 'até')
-  : new Date(r.datahora).toLocaleString('pt-BR');
   const hora = new Date(r.datahora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const status = r.status || 'Pendente';
 
@@ -1143,7 +1138,7 @@ function renderResItem(r) {
       <div class="top">
         <div>
           <div class="name">${r.nome || '—'}</div>
-          <div class="meta"><b>Período:</b> ${periodo} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)</div>
+          <div class="meta">${hora} • ${r.mesa || '—'} • ${r.pessoas || '0'} pessoa(s)</div>
         </div>
         <div class="row" style="margin-left:auto; flex-wrap:wrap; justify-content:flex-end">
           <span class="chip">${status}</span>
@@ -1194,11 +1189,9 @@ function renderResItem(r) {
     const fileBox = $('#fileBox');
     const fileName = $('#fileName');
     const clearFile = $('#clearFile');
-   const inputData = $('#data');
-const inputHoraDe = $('#horaDe');
-const inputHoraAte = $('#horaAte');
-inputData.min = ymd(new Date());
+    const inputData = $('#datahora');
 
+    inputData.min = nowLocalMin();
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
     ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
 
@@ -1220,36 +1213,11 @@ inputData.min = ymd(new Date());
     clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
 
     function validateExtra(){
-  const hoje = new Date();
-  const dataSelecionada = new Date(inputData.value + 'T00:00');
-  if (dataSelecionada < new Date(hoje.toDateString())) {
-    toast('A data da reserva não pode ser no passado.');
-    inputData.focus(); return false;
-  }
-
-  if (!inputHoraDe.value || !inputHoraAte.value) {
-    toast('Informe o horário de início e término.');
-    return false;
-  }
-
-  if (inputHoraAte.value <= inputHoraDe.value) {
-    toast('O horário final deve ser maior que o inicial.');
-    inputHoraAte.focus(); return false;
-  }
-
-  const telDigits = inputTelefone.value.replace(/\D/g,'');
-  if (telDigits.length < 10) {
-    toast('Telefone incompleto.');
-    inputTelefone.focus(); return false;
-  }
-
-  if (parseBRL(inputSinal.value) > 0 && !selectBanco.value) {
-    toast('Selecione o banco do adiantamento.');
-    selectBanco.focus(); return false;
-  }
-  return true;
-}
-
+      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
+      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
+      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
+      return true;
+    }
 
     form.addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -1300,20 +1268,13 @@ inputData.min = ymd(new Date());
 });
 
 
-   function collectPayload(){
-  const fd = new FormData(form);
-  const obj = Object.fromEntries(fd.entries());
-  obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
-  obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
-
-  // junta data e horários em um campo único
-  if (obj.data && obj.horaDe && obj.horaAte) {
-    obj.datahora = `${obj.data} ${obj.horaDe} até ${obj.horaAte}`;
-  }
-
-  return obj;
-}
-
+    function collectPayload(){
+      const fd = new FormData(form);
+      const obj = Object.fromEntries(fd.entries());
+      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
+      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
+      return obj;
+    }
 
     /* ==============================
        Ações: Editar / Concluir / Excluir
@@ -1687,71 +1648,49 @@ document.addEventListener('click', async (e) => {
 });
 function gerarPDFReserva(r) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  // 🎀 Cabeçalho
-  doc.setFont("helvetica", "bold");
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.setTextColor(255, 79, 161);
-  doc.text("Resumo da Reserva • M.KIDS", 105, 20, { align: "center" });
+  doc.text('Resumo da Reserva • M.KIDS', 105, 20, { align: 'center' });
 
-  doc.setDrawColor(255, 182, 193);
-  doc.line(20, 26, 190, 26);
-
-  // 🎉 Corpo
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(13);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
   doc.setTextColor(60, 60, 60);
 
-  const dataFmt = (r.datahora || '').includes('até')
-  ? r.datahora.replace('T', ' ').replace('até', 'até')
-  : new Date(r.datahora).toLocaleString("pt-BR");
-
-
   const detalhes = [
-    `👤 Nome: ${r.nome || "—"}`,
-    `📧 E-mail: ${r.email || "—"}`,
-    `📱 Telefone: ${r.telefone || "—"}`,
-    "",
-    `🕒 Período: ${dataFmt}`,
-    `📍 Local: ${r.mesa || "—"}`,
-    `👨‍👩‍👧‍👦 Pessoas: ${r.pessoas || "—"}`,
-    `🍽️ Cardápio: ${r.cardapio || "—"}`,
-    "",
-    "📝 Observações:",
-    (r.observacoes || "Sem observações.").replace(/\r?\n/g, "\n"),
-    "",
-    "💰 Valores:",
-    `• Valor Estimado: ${formatBRL(r.valorEstimado)}`,
-    `• Adiantamento: ${formatBRL(r.pagamentoAntecipado)}`,
-    `• Valor Final Pago: ${formatBRL(r.valorFinalPago)}`,
-    "",
-    `📊 Status: ${r.status || "—"}`
+    `Nome: ${r.nome || ''}`,
+    `E-mail: ${r.email || ''}`,
+    `Telefone: ${r.telefone || ''}`,
+    `Data e Hora: ${new Date(r.datahora).toLocaleString('pt-BR')}`,
+    `Local: ${r.mesa || ''}`,
+    `Pessoas: ${r.pessoas || ''}`,
+    `Cardápio: ${r.cardapio || ''}`,
+    '',
+    'Observações:',
+    (r.observacoes || 'Sem observações.'),
+    '',
+    `Valor Estimado: ${formatBRL(r.valorEstimado)}`,
+    `Adiantamento: ${formatBRL(r.pagamentoAntecipado)}`,
+    `Valor Final Pago: ${formatBRL(r.valorFinalPago)}`,
+    `Status: ${r.status || ''}`
   ];
 
-  let y = 40;
+  let y = 35;
   detalhes.forEach(linha => {
-    const partes = doc.splitTextToSize(linha, 170);
-    doc.text(partes, 20, y);
-    y += partes.length * 7;
+    const linhas = doc.splitTextToSize(linha, 170);
+    doc.text(linhas, 20, y);
+    y += (linhas.length * 6);
   });
 
-  // ✨ Rodapé
   doc.setFontSize(10);
   doc.setTextColor(138, 79, 255);
-  doc.text(
-    "Gerado automaticamente pelo Painel de Reservas M.KIDS",
-    105,
-    280,
-    { align: "center" }
-  );
+  doc.text('Gerado automaticamente pelo Painel de Reservas M.KIDS', 105, 280, { align: 'center' });
 
-  // 💾 Nome do arquivo limpo
-  const nomeArquivo = (r.nome || "Reserva").replace(/[^\w\s]/g, "_");
-  doc.save(`Reserva_${nomeArquivo}.pdf`);
-  toast("📄 PDF da reserva baixado!");
+  doc.save(`Reserva_${r.nome || 'Cliente'}.pdf`);
+  toast('📄 PDF da reserva baixado!');
 }
-
 
 
 </script>
